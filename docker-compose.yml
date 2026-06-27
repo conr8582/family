@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    command: npx nodemon server/index.js
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      # Source mounted for live reload — edits on host reflect immediately
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    restart: unless-stopped

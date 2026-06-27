@@ -1,0 +1,108 @@
+{% extends "base.njk" %}
+
+{% block content %}
+<div class="budget-header">
+  <h1>{{ monthLabel }}</h1>
+</div>
+
+{% if unreviewedCount > 0 %}
+<div class="unreviewed-banner">
+  <a href="/">{{ unreviewedCount }} unreviewed transaction{{ 's' if unreviewedCount !== 1 }} not yet included in these totals →</a>
+</div>
+{% endif %}
+
+{# ── Income ──────────────────────────────────────────────── #}
+<section class="budget-section">
+  <h2 class="section-heading">Income</h2>
+  <table class="budget-table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th class="num">Budget</th>
+        <th class="num">Actual</th>
+        <th class="num">Variance</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in income %}
+      <tr class="{{ 'zero-row' if r.actual_cents === 0 and r.monthly_budget_cents === 0 }}">
+        <td>{{ r.name }}</td>
+        <td class="num">{{ r.monthly_budget_cents | formatCentsPlain }}</td>
+        <td class="num">{{ r.actual_cents | formatCentsPlain }}</td>
+        <td class="num {{ 'over' if r.variance_cents < 0 }}">{{ r.variance_cents | formatVariance }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="section-total">
+        <td>Total Income</td>
+        <td class="num">{{ totalIncomeBudget | formatCentsPlain }}</td>
+        <td class="num">{{ totalIncomeActual | formatCentsPlain }}</td>
+        <td class="num {{ 'over' if (totalIncomeActual - totalIncomeBudget) < 0 }}">
+          {{ (totalIncomeActual - totalIncomeBudget) | formatVariance }}
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+</section>
+
+{# ── Expenses ────────────────────────────────────────────── #}
+<section class="budget-section">
+  <h2 class="section-heading">Expenses</h2>
+  <table class="budget-table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th class="num">Budget</th>
+        <th class="num">Actual</th>
+        <th class="num">Variance</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in expenses %}
+      <tr class="{{ 'zero-row' if r.actual_cents === 0 and r.monthly_budget_cents === 0 }}">
+        <td>
+          {{ r.name }}
+          {% if r.pct !== null %}
+          <div class="progress-bar">
+            <div class="progress-fill {{ 'over-budget' if r.pct > 100 }}"
+                 style="width: {{ [r.pct, 100] | min }}%"></div>
+          </div>
+          {% endif %}
+        </td>
+        <td class="num">{{ r.monthly_budget_cents | formatCentsPlain }}</td>
+        <td class="num">
+          {{ r.actual_cents | formatCentsPlain }}
+        </td>
+        <td class="num {{ 'over' if r.variance_cents < 0 }}">{{ r.variance_cents | formatVariance }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="section-total">
+        <td>Total Expenses</td>
+        <td class="num">{{ totalExpenseBudget | formatCentsPlain }}</td>
+        <td class="num">{{ totalExpenseActual | formatCentsPlain }}</td>
+        <td class="num {{ 'over' if (totalExpenseBudget - totalExpenseActual) < 0 }}">
+          {{ (totalExpenseBudget - totalExpenseActual) | formatVariance }}
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+</section>
+
+{# ── Net ─────────────────────────────────────────────────── #}
+<section class="budget-section net-section">
+  <table class="budget-table">
+    <tbody>
+      <tr class="net-row">
+        <td>Net (Income − Expenses)</td>
+        <td class="num">{{ netBudget | formatCentsPlain }}</td>
+        <td class="num">{{ netActual | formatCentsPlain }}</td>
+        <td class="num {{ 'over' if netActual < 0 }}">{{ (netActual - netBudget) | formatVariance }}</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+{% endblock %}

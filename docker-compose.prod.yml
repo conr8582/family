@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - /opt/finance-data:/app/data
+    env_file:
+      - .env
+    restart: always

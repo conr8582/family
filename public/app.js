@@ -1,0 +1,246 @@
+// ── Category combobox ─────────────────────────────────────────────────────────
+
+function initComboboxes() {
+  const cats = window.CATEGORIES || [];
+
+  // Build a lookup map for pre-filling text when a category_id is already set
+  const catById = Object.fromEntries(cats.map(c => [String(c.id), c.name]));
+
+  document.querySelectorAll('.combobox').forEach(box => {
+    const textInput   = box.querySelector('.tx-category-text');
+    const hiddenInput = box.querySelector('.tx-category');
+    const list        = box.querySelector('.combobox-list');
+
+    // Pre-fill if the transaction already has a category
+    const preId = textInput.dataset.selectedId;
+    if (preId && catById[preId]) textInput.value = catById[preId];
+
+    let activeIdx = -1;
+
+    function getMatches(query) {
+      if (!query) return cats;
+      const q = query.toLowerCase();
+      return cats.filter(c => c.name.toLowerCase().includes(q));
+    }
+
+    function renderList(matches) {
+      list.innerHTML = '';
+      activeIdx = -1;
+      if (!matches.length) { list.hidden = true; return; }
+
+      matches.forEach((cat, i) => {
+        const li = document.createElement('li');
+        li.dataset.id   = cat.id;
+        li.dataset.name = cat.name;
+        li.innerHTML = `<span>${cat.name}</span><span class="cat-type">${cat.type}</span>`;
+        li.addEventListener('mousedown', e => {
+          e.preventDefault(); // prevent blur firing before click
+          selectCategory(cat);
+        });
+        list.appendChild(li);
+      });
+
+      list.hidden = false;
+    }
+
+    function selectCategory(cat) {
+      textInput.value   = cat.name;
+      hiddenInput.value = cat.id;
+      list.hidden = true;
+      activeIdx = -1;
+    }
+
+    function highlightItem(idx) {
+      const items = list.querySelectorAll('li');
+      items.forEach(li => li.classList.remove('active'));
+      if (idx >= 0 && idx < items.length) {
+        items[idx].classList.add('active');
+        items[idx].scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    textInput.addEventListener('input', () => {
+      hiddenInput.value = ''; // clear selection when user types
+      renderList(getMatches(textInput.value));
+    });
+
+    textInput.addEventListener('focus', () => {
+      renderList(getMatches(textInput.value));
+    });
+
+    textInput.addEventListener('blur', () => {
+      // Short delay so mousedown on a list item fires first
+      setTimeout(() => { list.hidden = true; activeIdx = -1; }, 150);
+    });
+
+    textInput.addEventListener('keydown', e => {
+      const items = list.querySelectorAll('li');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, items.length - 1);
+        highlightItem(activeIdx);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        highlightItem(activeIdx);
+      } else if (e.key === 'Enter' && activeIdx >= 0) {
+        e.preventDefault();
+        const li = items[activeIdx];
+        selectCategory({ id: li.dataset.id, name: li.dataset.name });
+      } else if (e.key === 'Escape') {
+        list.hidden = true;
+        activeIdx = -1;
+      } else if (e.key === 'Tab' && activeIdx >= 0) {
+        // Confirm the highlighted item on Tab
+        const li = items[activeIdx];
+        selectCategory({ id: li.dataset.id, name: li.dataset.name });
+      }
+    });
+  });
+}
+
+// Run after DOM is ready (script is at bottom of body)
+initComboboxes();
+
+
+// ── Filed — Save button ───────────────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.tx-save');
+  if (!btn) return;
+
+  const row = btn.closest('.tx-row');
+  const id  = row.dataset.id;
+
+  const category_id  = row.querySelector('.tx-category').value;
+  const reimbursable = row.querySelector('.tx-reimb').value;
+  const notes        = row.querySelector('.tx-notes').value.trim();
+  const amount       = row.querySelector('.tx-amount-input').value;
+
+  const prev = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  try {
+    const res = await fetch(`/api/transactions/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category_id, reimbursable, notes, amount }),
+    });
+    if (!res.ok) throw new Error();
+    btn.textContent = 'Saved ✓';
+    setTimeout(() => { btn.textContent = prev; btn.disabled = false; }, 1500);
+  } catch {
+    btn.disabled = false;
+    btn.textContent = prev;
+    alert('Could not save — please try again.');
+  }
+});
+
+// ── Filed — Re-open button ────────────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.tx-reopen');
+  if (!btn) return;
+
+  const row = btn.closest('.tx-row');
+  const id  = row.dataset.id;
+
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  try {
+    const res = await fetch(`/api/transactions/${id}/reopen`, { method: 'POST' });
+    if (!res.ok) throw new Error();
+
+    row.classList.add('removing');
+    row.addEventListener('transitionend', () => {
+      const group = row.closest('.date-group');
+      row.remove();
+      if (group && group.querySelectorAll('.tx-row').length === 0) group.remove();
+    }, { once: true });
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Re-open';
+    alert('Could not re-open — please try again.');
+  }
+});
+
+// ── Review — Done button ──────────────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.tx-done');
+  if (!btn) return;
+
+  const row = btn.closest('.tx-row');
+  const id  = row.dataset.id;
+
+  const category_id  = row.querySelector('.tx-category').value;
+  const reimbursable = row.querySelector('.tx-reimb').value;
+  const notes        = row.querySelector('.tx-notes').value.trim();
+  const amount       = row.querySelector('.tx-amount-input').value;
+
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  try {
+    const res = await fetch(`/api/transactions/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category_id, reimbursable, notes, amount }),
+    });
+
+    if (!res.ok) throw new Error('Save failed');
+
+    row.classList.add('removing');
+    row.addEventListener('transitionend', () => {
+      const group = row.closest('.date-group');
+      row.remove();
+
+      if (group && group.querySelectorAll('.tx-row').length === 0) {
+        group.remove();
+      }
+
+      const badge = document.getElementById('reviewCount');
+      if (badge) {
+        const n = parseInt(badge.textContent, 10) - 1;
+        if (n <= 0) {
+          const list = document.getElementById('reviewList');
+          if (list) list.outerHTML = '<div class="empty-state"><p>You\'re up to date.</p></div>';
+          badge.remove();
+        } else {
+          badge.textContent = n;
+        }
+      }
+    }, { once: true });
+
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Done';
+    alert('Could not save — please try again.');
+  }
+});
+
+
+// ── Sync button ───────────────────────────────────────────────────────────────
+
+const syncBtn = document.getElementById('syncBtn');
+if (syncBtn) {
+  syncBtn.addEventListener('click', async () => {
+    syncBtn.classList.add('syncing');
+    syncBtn.textContent = 'Syncing…';
+    try {
+      const res  = await fetch('/api/sync', { method: 'POST' });
+      const data = await res.json();
+      if (data.txAdded > 0) {
+        window.location.reload();
+      } else {
+        syncBtn.textContent = 'Up to date';
+        setTimeout(() => { syncBtn.textContent = 'Sync'; syncBtn.classList.remove('syncing'); }, 2000);
+      }
+    } catch {
+      syncBtn.textContent = 'Sync';
+      syncBtn.classList.remove('syncing');
+    }
+  });
+}

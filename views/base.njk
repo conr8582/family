@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title or 'Finance' }}</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <span class="brand">Finance</span>
+      <a href="/"       class="{{ 'active' if activePage === 'review' }}">Review</a>
+      <a href="/budget" class="{{ 'active' if activePage === 'budget' }}">Budget</a>
+      <a href="/filed"  class="{{ 'active' if activePage === 'filed' }}">Filed</a>
+      <div class="spacer"></div>
+      <button class="btn sync-btn" id="syncBtn">Sync</button>
+      <form method="POST" action="/logout" style="display:inline">
+        <button class="btn">Sign out</button>
+      </form>
+    </div>
+  </nav>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

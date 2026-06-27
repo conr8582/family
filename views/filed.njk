@@ -1,0 +1,80 @@
+{% extends "base.njk" %}
+
+{% block content %}
+
+<script>
+window.CATEGORIES = {{ categoriesFlat | dump | safe }};
+</script>
+
+<div class="review-header">
+  <h1>
+    Filed
+    <span class="badge" style="background: var(--muted)">{{ total }}</span>
+  </h1>
+</div>
+
+{% if total === 0 %}
+  <div class="empty-state"><p>No filed transactions yet.</p></div>
+{% else %}
+  <div id="filedList">
+    {% for group in groups %}
+    <div class="date-group" data-date="{{ group.date }}">
+      <h2 class="date-heading">{{ group.date | formatDate }}</h2>
+
+      {% for tx in group.transactions %}
+      <div class="tx-row" id="tx-{{ tx.id }}" data-id="{{ tx.id }}">
+        <div class="tx-main">
+          <span class="tx-desc">{{ tx.description }}</span>
+          <span class="tx-account">{{ tx.account_name | shortAccount }}</span>
+          <span class="tx-amount amount {% if tx.amount_cents < 0 %}negative{% else %}positive{% endif %}">
+            {{ tx.amount_cents | formatCents }}
+          </span>
+        </div>
+        <div class="tx-controls">
+
+          <div class="combobox">
+            <input
+              type="text"
+              class="tx-category-text"
+              placeholder="Category…"
+              autocomplete="off"
+              aria-label="Category"
+              {% if tx.category_id %}data-selected-id="{{ tx.category_id }}"{% endif %}
+            >
+            <input type="hidden" class="tx-category" value="{{ tx.category_id or '' }}">
+            <ul class="combobox-list" hidden></ul>
+          </div>
+
+          <input
+            class="tx-amount-input"
+            type="number"
+            step="0.01"
+            value="{{ (tx.amount_cents / 100) | round(2) }}"
+            aria-label="Amount"
+          >
+
+          <select class="tx-reimb" name="reimbursable" aria-label="Reimbursable">
+            <option value="none"          {% if tx.reimbursable === 'none' %}selected{% endif %}>—</option>
+            <option value="reimbursable"  {% if tx.reimbursable === 'reimbursable' %}selected{% endif %}>Reimbursable</option>
+            <option value="reimbursement" {% if tx.reimbursable === 'reimbursement' %}selected{% endif %}>Reimbursement</option>
+          </select>
+
+          <input
+            class="tx-notes"
+            type="text"
+            name="notes"
+            placeholder="Note…"
+            value="{{ tx.notes or '' }}"
+            aria-label="Notes"
+          >
+
+          <button class="btn tx-save" type="button">Save</button>
+          <button class="btn tx-reopen" type="button">Re-open</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

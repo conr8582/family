@@ -1,0 +1,4 @@
+# Replace finance.yourdomain.com with your actual subdomain
+finance.yourdomain.com {
+    reverse_proxy localhost:3000
+}
