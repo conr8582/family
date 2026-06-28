@@ -5,10 +5,20 @@ const router = express.Router();
 
 router.get('/budget', (req, res) => {
   const now = new Date();
-  const year  = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const monthStr   = `${year}-${month}`;
-  const monthLabel = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  const monthParam = req.query.month;
+  const monthStr = (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) ? monthParam : nowStr;
+
+  const [y, m] = monthStr.split('-').map(Number);
+  const monthLabel = new Date(Date.UTC(y, m - 1, 1))
+    .toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+  const prevDate = new Date(Date.UTC(y, m - 2, 1));
+  const nextDate = new Date(Date.UTC(y, m,     1));
+  const prevMonth = `${prevDate.getUTCFullYear()}-${String(prevDate.getUTCMonth() + 1).padStart(2, '0')}`;
+  const nextMonth = `${nextDate.getUTCFullYear()}-${String(nextDate.getUTCMonth() + 1).padStart(2, '0')}`;
+  const isCurrentMonth = monthStr === nowStr;
 
   // Per-category actuals for the current month.
   // Excludes: unreviewed, reimbursable/reimbursement transactions, transfer categories.
@@ -41,11 +51,11 @@ router.get('/budget', (req, res) => {
     ORDER BY c.sort_order
   `).all([monthStr]);
 
-  // Count unreviewed transactions this month (their spend isn't in the totals yet)
-  const { n: unreviewedCount } = db.prepare(`
+  // Only show unreviewed banner on the current month
+  const { n: unreviewedCount } = isCurrentMonth ? db.prepare(`
     SELECT count(*) AS n FROM transactions
     WHERE reviewed = 0 AND strftime('%Y-%m', date) = ?
-  `).get([monthStr]);
+  `).get([monthStr]) : { n: 0 };
 
   // Enrich each row with variance and % used, then split by type
   function enrich(r) {
@@ -76,6 +86,10 @@ router.get('/budget', (req, res) => {
 
   res.render('budget.njk', {
     monthLabel,
+    monthStr,
+    prevMonth,
+    nextMonth,
+    isCurrentMonth,
     income,
     expenses,
     totalExpenseBudget,
@@ -92,7 +106,9 @@ router.get('/budget', (req, res) => {
 // ── GET /api/budget/:categoryId/transactions ──────────────────────────────────
 router.get('/api/budget/:categoryId/transactions', (req, res) => {
   const now = new Date();
-  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthParam = req.query.month;
+  const monthStr = (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) ? monthParam : nowStr;
 
   const rows = db.prepare(`
     SELECT t.id, t.date, t.description, t.amount_cents, a.name AS account_name

@@ -1,8 +1,17 @@
 {% extends "base.njk" %}
 
 {% block content %}
+<script>window.BUDGET_MONTH = "{{ monthStr }}";</script>
 <div class="budget-header">
-  <h1>{{ monthLabel }}</h1>
+  <div class="month-nav">
+    <a href="/budget?month={{ prevMonth }}" class="month-arrow" aria-label="Previous month">&#8592;</a>
+    <h1>{{ monthLabel }}</h1>
+    {% if isCurrentMonth %}
+      <span class="month-arrow disabled" aria-hidden="true">&#8594;</span>
+    {% else %}
+      <a href="/budget?month={{ nextMonth }}" class="month-arrow" aria-label="Next month">&#8594;</a>
+    {% endif %}
+  </div>
 </div>
 
 {% if unreviewedCount > 0 %}

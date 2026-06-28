@@ -285,7 +285,8 @@ document.addEventListener('click', async (e) => {
   row.after(detailRow);
 
   try {
-    const res  = await fetch(`/api/budget/${categoryId}/transactions`);
+    const month = window.BUDGET_MONTH ? `?month=${window.BUDGET_MONTH}` : '';
+    const res  = await fetch(`/api/budget/${categoryId}/transactions${month}`);
     const txns = await res.json();
 
     if (!txns.length) {

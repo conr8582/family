@@ -300,6 +300,24 @@ input:focus, select:focus, textarea:focus {
 /* ── Budget screen ────────────────────────────────────────── */
 .budget-header { margin-bottom: 8px; padding-top: 8px; }
 
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.month-arrow {
+  font-size: 1.1rem;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  line-height: 1;
+  user-select: none;
+}
+.month-arrow:hover { color: var(--text); background: var(--bg); }
+.month-arrow.disabled { color: var(--border); cursor: default; }
+
 .unreviewed-banner {
   margin-bottom: 28px;
   padding: 10px 14px;
