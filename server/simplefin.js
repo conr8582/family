@@ -1,8 +1,14 @@
 const db = require('../db/client');
 
 function getAccessUrl() {
+  // On a fresh deploy the DB is empty — fall back to env var and persist it
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(['simplefin_access_url']);
-  return row ? row.value : null;
+  if (row) return row.value;
+  if (process.env.SIMPLEFIN_ACCESS_URL) {
+    saveAccessUrl(process.env.SIMPLEFIN_ACCESS_URL);
+    return process.env.SIMPLEFIN_ACCESS_URL;
+  }
+  return null;
 }
 
 function saveAccessUrl(url) {

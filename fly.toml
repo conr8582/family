@@ -1,0 +1,27 @@
+# fly.toml — generated for family-finance-tracker
+# Deploy with: fly deploy
+
+app = "wheezie-college-fund"
+primary_region = "ewr"
+
+[build]
+
+[env]
+  NODE_ENV  = "production"
+  PORT      = "3000"
+  DB_PATH   = "/data/finance.db"
+  SYNC_HOUR = "6"
+
+[http_service]
+  internal_port = 3000
+  force_https   = true
+  auto_stop_machines = "off"
+
+[[mounts]]
+  source      = "finance_data"
+  destination = "/data"
+
+[[vm]]
+  memory   = "512mb"
+  cpu_kind = "shared"
+  cpus     = 1
