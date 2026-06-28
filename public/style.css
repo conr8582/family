@@ -221,10 +221,36 @@ input:focus, select:focus, textarea:focus {
 }
 
 .combobox         { flex: 0 0 180px; position: relative; }
-.tx-amount-input  { flex: 0 0 90px; text-align: right; font-variant-numeric: tabular-nums; }
+.amount-field     { flex: 0 0 90px; display: flex; align-items: center; gap: 4px; }
 .tx-reimb         { flex: 0 0 140px; }
 .tx-notes         { flex: 1; min-width: 0; }
 .tx-done          { flex: 0 0 auto; white-space: nowrap; }
+
+.tx-amount-display {
+  flex: 1;
+  text-align: right;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tx-amount-edit-btn {
+  all: unset;
+  cursor: pointer;
+  color: var(--muted);
+  line-height: 0;
+  padding: 2px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.tx-amount-edit-btn:hover { color: var(--text); }
+
+.amount-field .tx-amount-input {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── Combobox dropdown ────────────────────────────────────── */
 .combobox-list {
@@ -383,7 +409,7 @@ input:focus, select:focus, textarea:focus {
   /* Review — controls wrap to two rows */
   .tx-controls { flex-wrap: wrap; gap: 6px; }
   .combobox        { flex: 1 1 100%; }   /* row 1: full width */
-  .tx-amount-input { flex: 0 0 80px; }   /* row 2: amount */
+  .amount-field    { flex: 0 0 80px; }   /* row 2: amount */
   .tx-reimb        { flex: 1 1 120px; }  /* row 2: reimb */
   .tx-notes        { flex: 1 1 100%; }   /* row 3: full width */
   .tx-done         { flex: 0 0 auto; }

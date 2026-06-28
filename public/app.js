@@ -101,6 +101,42 @@ function initComboboxes() {
 
 // Run after DOM is ready (script is at bottom of body)
 initComboboxes();
+initAmountFields();
+
+// ── Amount field — display/edit toggle ───────────────────────────────────────
+
+function initAmountFields() {
+  document.querySelectorAll('.amount-field').forEach(field => {
+    const input = field.querySelector('.tx-amount-input');
+    const display = field.querySelector('.tx-amount-display');
+    display.textContent = parseFloat(input.value).toFixed(2);
+  });
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.tx-amount-edit-btn');
+  if (!btn) return;
+  const field = btn.closest('.amount-field');
+  field.querySelector('.tx-amount-display').hidden = true;
+  btn.hidden = true;
+  const input = field.querySelector('.tx-amount-input');
+  input.hidden = false;
+  input.focus();
+  input.select();
+});
+
+document.addEventListener('focusout', e => {
+  const input = e.target.closest('.tx-amount-input');
+  if (!input) return;
+  const field = input.closest('.amount-field');
+  if (!field) return;
+  const val = parseFloat(input.value);
+  const display = field.querySelector('.tx-amount-display');
+  if (!isNaN(val)) display.textContent = val.toFixed(2);
+  input.hidden = true;
+  display.hidden = false;
+  field.querySelector('.tx-amount-edit-btn').hidden = false;
+});
 
 
 // ── Filed — Save button ───────────────────────────────────────────────────────
