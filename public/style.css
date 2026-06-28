@@ -359,3 +359,47 @@ input:focus, select:focus, textarea:focus {
 }
 
 .progress-fill.over-budget { background: var(--red); }
+
+/* ── Budget drill-down ────────────────────────────────────── */
+.budget-row { cursor: pointer; }
+.budget-row:hover td { background: var(--bg); }
+
+.row-toggle {
+  display: inline-block;
+  width: 14px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  transition: transform 0.15s;
+  user-select: none;
+}
+.budget-row.open .row-toggle { transform: rotate(90deg); }
+
+.drill-down-row td {
+  padding: 0;
+  border-bottom: none;
+}
+
+.drill-down-list {
+  margin: 0 0 8px 18px;
+  border-left: 2px solid var(--border);
+  padding-left: 12px;
+}
+
+.drill-down-item {
+  display: grid;
+  grid-template-columns: 80px 1fr auto auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.drill-down-item:last-child { border-bottom: none; }
+
+.drill-date  { color: var(--muted); white-space: nowrap; }
+.drill-desc  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drill-acct  { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+.drill-amt   { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+
+.drill-empty { padding: 8px 0; color: var(--muted); font-size: 0.875rem; }

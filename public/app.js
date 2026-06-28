@@ -222,6 +222,59 @@ document.addEventListener('click', async (e) => {
 });
 
 
+// ── Budget category drill-down ────────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const row = e.target.closest('.budget-row');
+  if (!row) return;
+
+  const categoryId = row.dataset.categoryId;
+  if (!categoryId) return;
+
+  // Toggle: if already open, close it
+  const existingDetail = row.nextElementSibling;
+  if (existingDetail && existingDetail.classList.contains('drill-down-row')) {
+    existingDetail.remove();
+    row.classList.remove('open');
+    return;
+  }
+
+  row.classList.add('open');
+
+  // Insert a loading row
+  const detailRow = document.createElement('tr');
+  detailRow.className = 'drill-down-row';
+  const colCount = row.cells.length;
+  detailRow.innerHTML = `<td colspan="${colCount}"><div class="drill-down-list"><div class="drill-empty">Loading…</div></div></td>`;
+  row.after(detailRow);
+
+  try {
+    const res  = await fetch(`/api/budget/${categoryId}/transactions`);
+    const txns = await res.json();
+
+    if (!txns.length) {
+      detailRow.querySelector('.drill-down-list').innerHTML = '<div class="drill-empty">No transactions this month.</div>';
+      return;
+    }
+
+    const items = txns.map(t => {
+      const amt   = (Math.abs(t.amount_cents) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
+      const sign  = t.amount_cents < 0 ? '-' : '+';
+      const acct  = t.account_name.match(/\((\d+)\)$/) ? '···' + t.account_name.match(/\((\d+)\)$/)[1] : t.account_name.split(' ')[0];
+      return `<div class="drill-down-item">
+        <span class="drill-date">${t.date.slice(5)}</span>
+        <span class="drill-desc">${t.description}</span>
+        <span class="drill-acct">${acct}</span>
+        <span class="drill-amt">${sign}$${amt}</span>
+      </div>`;
+    }).join('');
+
+    detailRow.querySelector('.drill-down-list').innerHTML = items;
+  } catch {
+    detailRow.querySelector('.drill-down-list').innerHTML = '<div class="drill-empty">Failed to load.</div>';
+  }
+});
+
 // ── Sync button ───────────────────────────────────────────────────────────────
 
 const syncBtn = document.getElementById('syncBtn');

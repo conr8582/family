@@ -89,4 +89,23 @@ router.get('/budget', (req, res) => {
   });
 });
 
+// ── GET /api/budget/:categoryId/transactions ──────────────────────────────────
+router.get('/api/budget/:categoryId/transactions', (req, res) => {
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  const rows = db.prepare(`
+    SELECT t.id, t.date, t.description, t.amount_cents, a.name AS account_name
+    FROM transactions t
+    JOIN accounts a ON a.id = t.account_id
+    WHERE t.category_id = ?
+      AND t.reviewed = 1
+      AND t.reimbursable = 'none'
+      AND strftime('%Y-%m', t.date) = ?
+    ORDER BY t.date DESC
+  `).all([parseInt(req.params.categoryId), monthStr]);
+
+  res.json(rows);
+});
+
 module.exports = router;

@@ -25,8 +25,8 @@
     </thead>
     <tbody>
       {% for r in income %}
-      <tr class="{{ 'zero-row' if r.actual_cents === 0 and r.monthly_budget_cents === 0 }}">
-        <td>{{ r.name }}</td>
+      <tr class="budget-row {{ 'zero-row' if r.actual_cents === 0 and r.monthly_budget_cents === 0 }}" data-category-id="{{ r.id }}">
+        <td><span class="row-toggle">›</span> {{ r.name }}</td>
         <td class="num">{{ r.monthly_budget_cents | formatCentsPlain }}</td>
         <td class="num">{{ r.actual_cents | formatCentsPlain }}</td>
         <td class="num {{ 'over' if r.variance_cents < 0 }}">{{ r.variance_cents | formatVariance }}</td>
@@ -60,9 +60,9 @@
     </thead>
     <tbody>
       {% for r in expenses %}
-      <tr class="{{ 'zero-row' if r.actual_cents === 0 and r.monthly_budget_cents === 0 }}">
+      <tr class="budget-row {{ 'zero-row' if r.actual_cents === 0 and r.monthly_budget_cents === 0 }}" data-category-id="{{ r.id }}">
         <td>
-          {{ r.name }}
+          <span class="row-toggle">›</span> {{ r.name }}
           {% if r.pct !== null %}
           <div class="progress-bar">
             <div class="progress-fill {{ 'over-budget' if r.pct > 100 }}"
