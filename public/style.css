@@ -395,9 +395,13 @@ input:focus, select:focus, textarea:focus {
   /* Combobox dropdown full-width on mobile */
   .combobox-list { min-width: unset; right: 0; }
 
-  /* Budget table — hide Budget column, keep Category / Actual / Variance */
-  .budget-table th:nth-child(2),
-  .budget-table td:nth-child(2) { display: none; }
+  /* Budget table — all 4 columns, compressed */
+  .budget-table { font-size: 0.72rem; }
+  .budget-table th,
+  .budget-table td { padding: 7px 4px 7px 0; }
+  .budget-table td:first-child { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .budget-table th:first-child { padding-right: 4px; }
+  .progress-bar { display: none; } /* hide bars on mobile, too cramped */
 
   /* Budget drill-down — hide account column */
   .drill-down-item { grid-template-columns: 56px 1fr auto; }
