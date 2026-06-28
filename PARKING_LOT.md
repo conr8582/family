@@ -69,3 +69,39 @@ Future ideas to revisit. Not in scope for the current build.
 **Implementation order:** Do the SimpleFIN history extension first (easy), then decide if the spreadsheet import is worth the mapping work.
 
 **Note:** This was explicitly out of scope in the original PRD — flagged here as a conscious revisit, not an oversight.
+
+---
+
+## Morning email digest
+
+**The problem:** No proactive notification when new transactions arrive — you have to remember to open the app.
+
+**What this would look like:**
+- Daily email at ~8am listing all unreviewed transactions (description, account, amount)
+- Link back to the app to review
+- Only sends if there's something to review (no email on empty days)
+
+**Implementation notes:**
+- Use **Resend** (resend.com) — free tier, simple API, single npm package
+- Add `RESEND_API_KEY` and `NOTIFY_EMAIL` to env vars / Fly secrets
+- Hook into the existing `node-cron` scheduler alongside the daily sync
+- Requires a verified sending domain to email arbitrary addresses; without one, can only send to the Resend account email
+
+**Why deferred:** Nice-to-have; app is usable without it.
+
+---
+
+## Add Caroline's bank account to SimpleFIN
+
+**The problem:** Only Barry's Chase accounts are currently connected. Caroline may have separate bank accounts (different institution) that aren't in the feed.
+
+**What this would look like:**
+- Add Caroline's bank as a second SimpleFIN connection, or add her accounts to the existing Chase connection if they're under the same login
+- If a different bank: SimpleFIN supports multiple institutions — would need a second setup token claim and a second access URL stored
+
+**Implementation notes:**
+- If same Chase login: just add the accounts in the SimpleFIN dashboard, they'll appear on next sync automatically
+- If different bank: add `SIMPLEFIN_ACCESS_URL_2` secret, update sync to fetch from both URLs and merge results
+- Note: "Bank accounts beyond Chase" was explicitly out of scope in the original PRD
+
+**Why deferred:** Scope decision — revisit once the Chase workflow is stable.
