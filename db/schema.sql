@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS transactions (
                   CHECK (reimbursable IN ('none', 'reimbursable', 'reimbursement')),
   reviewed      INTEGER NOT NULL DEFAULT 0, -- 0 = needs review, 1 = done
   notes         TEXT,
+  notes_auto    TEXT,                       -- cached AI merchant lookup result
   created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 

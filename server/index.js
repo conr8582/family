@@ -8,6 +8,7 @@ const gmail = require('./gmail');
 const filters = require('./filters');
 const reviewRouter = require('./routes/review');
 const budgetRouter = require('./routes/budget');
+const { lookupTransaction } = require('./lookup');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -84,6 +85,20 @@ app.get('/setup/gmail/callback', async (req, res) => {
   } catch (err) {
     console.error('[/setup/gmail/callback]', err.message);
     res.status(500).send(`Failed to connect Gmail: ${err.message}`);
+  }
+});
+
+app.post('/api/transactions/:id/lookup', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid ID' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'ANTHROPIC_API_KEY not configured' });
+  try {
+    const result = await lookupTransaction(id);
+    if (result === null) return res.status(404).json({ error: 'Transaction not found' });
+    res.json({ result });
+  } catch (err) {
+    console.error('[/api/transactions/:id/lookup]', err.message);
+    res.status(500).json({ error: 'Lookup failed' });
   }
 });
 

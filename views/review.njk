@@ -31,11 +31,13 @@ window.CATEGORIES = {{ categoriesFlat | dump | safe }};
       <div class="tx-row" id="tx-{{ tx.id }}" data-id="{{ tx.id }}">
         <div class="tx-main">
           <span class="tx-desc">{{ tx.description }}</span>
+          <button class="tx-lookup-btn" type="button" title="What is this charge?" aria-label="Look up merchant">?</button>
           <span class="tx-account">{{ tx.account_name | shortAccount }}</span>
           <span class="tx-amount amount {% if tx.amount_cents < 0 %}negative{% else %}positive{% endif %}">
             {{ tx.amount_cents | formatCents }}
           </span>
         </div>
+        <div class="tx-lookup-result" hidden></div>
         <div class="tx-controls">
 
           {# Category combobox #}

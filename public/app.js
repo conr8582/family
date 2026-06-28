@@ -312,6 +312,35 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// ── "What is this?" merchant lookup ──────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.tx-lookup-btn');
+  if (!btn) return;
+  if (btn.dataset.loading) return;
+
+  const row = btn.closest('.tx-row');
+  const id = row.dataset.id;
+  const resultEl = row.querySelector('.tx-lookup-result');
+
+  btn.dataset.loading = '1';
+  btn.textContent = '…';
+  resultEl.hidden = false;
+  resultEl.textContent = 'Looking up…';
+
+  try {
+    const res = await fetch(`/api/transactions/${id}/lookup`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Lookup failed');
+    resultEl.textContent = '(AI guess) ' + data.result;
+  } catch {
+    resultEl.textContent = 'Could not identify — try again later.';
+  } finally {
+    btn.textContent = '?';
+    delete btn.dataset.loading;
+  }
+});
+
 // ── Sync button ───────────────────────────────────────────────────────────────
 
 const syncBtn = document.getElementById('syncBtn');
