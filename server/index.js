@@ -32,6 +32,9 @@ app.use(express.urlencoded({ extended: false }));
 // Static assets
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Trust Fly.io's proxy so secure cookies work over HTTPS
+app.set('trust proxy', 1);
+
 // Sessions
 app.use(sessionMiddleware());
 
