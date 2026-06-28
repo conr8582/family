@@ -4,6 +4,7 @@ const nunjucks = require('nunjucks');
 const path = require('path');
 const { runSync, scheduleDailySync } = require('./sync');
 const { sessionMiddleware, requireAuth, handleLogin, handleLogout } = require('./auth');
+const gmail = require('./gmail');
 const filters = require('./filters');
 const reviewRouter = require('./routes/review');
 const budgetRouter = require('./routes/budget');
@@ -57,6 +58,32 @@ app.post('/api/sync', async (req, res) => {
   } catch (err) {
     console.error('[/api/sync]', err.message);
     res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Gmail OAuth setup — connect once to enable Amazon transaction enrichment
+app.get('/setup/gmail', (req, res) => {
+  if (!gmail.isConfigured()) {
+    return res.status(400).send(
+      'Gmail not configured. Add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI to .env.'
+    );
+  }
+  res.redirect(gmail.getAuthUrl());
+});
+
+app.get('/setup/gmail/callback', async (req, res) => {
+  const { code, error } = req.query;
+  if (error) return res.status(400).send(`Gmail auth error: ${error}`);
+  if (!code) return res.status(400).send('Missing authorization code.');
+  try {
+    await gmail.exchangeCode(code);
+    res.send(
+      '<p>Gmail connected. Amazon transactions will have item details pulled into notes during the next sync.</p>' +
+      '<p><a href="/">Return to app</a></p>'
+    );
+  } catch (err) {
+    console.error('[/setup/gmail/callback]', err.message);
+    res.status(500).send(`Failed to connect Gmail: ${err.message}`);
   }
 });
 
