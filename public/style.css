@@ -506,6 +506,82 @@ input:focus, select:focus, textarea:focus {
 
 .drill-empty { padding: 8px 0; color: var(--muted); font-size: 0.875rem; }
 
+/* ── Navan reminder banner ────────────────────────────────────── */
+.navan-reminder {
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+.navan-reminder a { color: #92400e; font-weight: 500; }
+.navan-reminder a:hover { text-decoration: underline; }
+
+/* ── Reimbursements page ──────────────────────────────────────── */
+.navan-upload-area {
+  margin-bottom: 28px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.navan-upload-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.navan-upload-prompt { color: var(--muted); font-size: 0.875rem; }
+.navan-upload-done   { font-size: 0.875rem; color: var(--green); font-weight: 500; }
+
+.navan-upload-msg {
+  margin-top: 10px;
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.reimb-section { margin-bottom: 28px; }
+
+.reimb-heading-green { color: var(--green); }
+.reimb-heading-amber { color: #d97706; }
+
+.reimb-item {
+  display: grid;
+  grid-template-columns: 64px 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.reimb-item:last-child { border-bottom: none; }
+
+.reimb-item-green { border-left: 3px solid var(--green); padding-left: 10px; }
+.reimb-item-amber { border-left: 3px solid #d97706; padding-left: 10px; }
+
+.reimb-date { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.reimb-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reimb-acct { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+.reimb-amt  { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+
+.reimb-all-done {
+  padding: 40px 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 640px) {
+  .reimb-item {
+    grid-template-columns: 52px 1fr auto auto;
+  }
+  .reimb-acct { display: none; }
+}
+
 /* ── Merchant lookup ──────────────────────────────────────────── */
 .tx-lookup-btn {
   all: unset;

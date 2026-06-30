@@ -8,6 +8,7 @@ const gmail = require('./gmail');
 const filters = require('./filters');
 const reviewRouter = require('./routes/review');
 const budgetRouter = require('./routes/budget');
+const reimbursementsRouter = require('./routes/reimbursements');
 const { lookupTransaction } = require('./lookup');
 
 const app = express();
@@ -104,6 +105,7 @@ app.post('/api/transactions/:id/lookup', async (req, res) => {
 
 app.use('/', reviewRouter);
 app.use('/', budgetRouter);
+app.use('/', reimbursementsRouter);
 
 app.listen(PORT, () => {
   console.log(`[${new Date().toISOString()}] Server running on http://localhost:${PORT}`);

@@ -1,0 +1,104 @@
+{% extends "base.njk" %}
+
+{% block content %}
+<script>window.REIMB_MONTH = "{{ monthStr }}";</script>
+
+<div class="budget-header">
+  <div class="month-nav">
+    <a href="/reimbursements?month={{ prevMonth }}" class="month-arrow" aria-label="Previous month">&#8592;</a>
+    <h1>Reimbursements — {{ monthLabel }}</h1>
+    {% if isCurrentMonth %}
+      <span class="month-arrow disabled" aria-hidden="true">&#8594;</span>
+    {% else %}
+      <a href="/reimbursements?month={{ nextMonth }}" class="month-arrow" aria-label="Next month">&#8594;</a>
+    {% endif %}
+  </div>
+</div>
+
+{# ── Navan upload area ───────────────────────────────────────── #}
+<div class="navan-upload-area">
+  <div class="navan-upload-inner">
+    {% if reportUploaded %}
+      <span class="navan-upload-done">Navan report processed for {{ monthLabel }}</span>
+      <button class="btn navan-upload-btn" type="button">Upload another screenshot</button>
+    {% else %}
+      <span class="navan-upload-prompt">No Navan report uploaded for {{ monthLabel }}</span>
+      <button class="btn btn-primary navan-upload-btn" type="button">Upload Navan screenshot</button>
+    {% endif %}
+  </div>
+  <p class="navan-upload-msg" hidden></p>
+  <input type="file" class="navan-file-input" accept="image/*" hidden>
+</div>
+
+{% if total === 0 %}
+  <div class="empty-state"><p>No reimbursable transactions for {{ monthLabel }}.</p></div>
+{% else %}
+
+  {# ── Confirmed reimbursed ─────────────────────────────────── #}
+  {% if reimbursed.length > 0 %}
+  <section class="reimb-section">
+    <h2 class="section-heading reimb-heading-green">Confirmed reimbursed ({{ reimbursed.length }})</h2>
+    {% for tx in reimbursed %}
+    <div class="reimb-item reimb-item-green" data-id="{{ tx.id }}">
+      <span class="reimb-date">{{ tx.date_display }}</span>
+      <span class="reimb-desc">{{ tx.description }}</span>
+      <span class="reimb-acct">{{ tx.account_name | shortAccount }}</span>
+      <span class="reimb-amt">${{ tx.amount_display }}</span>
+      <button class="btn reimb-undo-btn" type="button" data-id="{{ tx.id }}">Undo</button>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {# ── Pending ──────────────────────────────────────────────── #}
+  {% if pending.length > 0 %}
+  <section class="reimb-section">
+    <h2 class="section-heading reimb-heading-amber">Submitted, awaiting payment ({{ pending.length }})</h2>
+    {% for tx in pending %}
+    <div class="reimb-item reimb-item-amber" data-id="{{ tx.id }}">
+      <span class="reimb-date">{{ tx.date_display }}</span>
+      <span class="reimb-desc">{{ tx.description }}</span>
+      <span class="reimb-acct">{{ tx.account_name | shortAccount }}</span>
+      <span class="reimb-amt">${{ tx.amount_display }}</span>
+      <button class="btn reimb-undo-btn" type="button" data-id="{{ tx.id }}">Undo</button>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {# ── Manually confirmed ───────────────────────────────────── #}
+  {% if manual.length > 0 %}
+  <section class="reimb-section">
+    <h2 class="section-heading">Manually confirmed ({{ manual.length }})</h2>
+    {% for tx in manual %}
+    <div class="reimb-item" data-id="{{ tx.id }}">
+      <span class="reimb-date">{{ tx.date_display }}</span>
+      <span class="reimb-desc">{{ tx.description }}</span>
+      <span class="reimb-acct">{{ tx.account_name | shortAccount }}</span>
+      <span class="reimb-amt">${{ tx.amount_display }}</span>
+      <button class="btn reimb-undo-btn" type="button" data-id="{{ tx.id }}">Undo</button>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {# ── Unconfirmed ──────────────────────────────────────────── #}
+  {% if unconfirmed.length > 0 %}
+  <section class="reimb-section">
+    <h2 class="section-heading">Unconfirmed ({{ unconfirmed.length }})</h2>
+    {% for tx in unconfirmed %}
+    <div class="reimb-item" data-id="{{ tx.id }}">
+      <span class="reimb-date">{{ tx.date_display }}</span>
+      <span class="reimb-desc">{{ tx.description }}</span>
+      <span class="reimb-acct">{{ tx.account_name | shortAccount }}</span>
+      <span class="reimb-amt">${{ tx.amount_display }}</span>
+      <button class="btn btn-primary reimb-confirm-btn" type="button" data-id="{{ tx.id }}">Confirm</button>
+    </div>
+    {% endfor %}
+  </section>
+  {% else %}
+  <p class="reimb-all-done">All {{ total }} transactions reconciled for {{ monthLabel }}.</p>
+  {% endif %}
+
+{% endif %}
+{% endblock %}

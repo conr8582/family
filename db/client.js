@@ -23,8 +23,9 @@ const db = new Database(dbPath);
 
 db.exec('PRAGMA foreign_keys = ON');
 
-// Idempotent migration: add notes_auto column for merchant lookup caching
+// Idempotent migrations
 try { db.exec('ALTER TABLE transactions ADD COLUMN notes_auto TEXT'); } catch {}
+try { db.exec("ALTER TABLE transactions ADD COLUMN navan_status TEXT"); } catch {}
 
 // Close cleanly on process exit so the lock is always released
 process.on('exit', () => { try { db.close(); } catch {} });

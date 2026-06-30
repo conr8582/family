@@ -44,11 +44,22 @@ router.get('/', (req, res) => {
 
   const { flat, byType } = getCategories();
 
+  // Navan reminder: show banner on last 2 days of month if report not yet uploaded
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const nearEndOfMonth = now.getDate() >= lastDay - 1;
+  const navanUploaded = !!db.prepare('SELECT 1 FROM settings WHERE key = ?').get([`navan_upload_${thisMonth}`]);
+  const showNavanReminder = nearEndOfMonth && !navanUploaded;
+  const reminderMonth = now.toLocaleDateString('en-US', { month: 'long' });
+
   res.render('review.njk', {
     groups: groupByDate(rawTx),
     total: rawTx.length,
     categories: byType,
     categoriesFlat: flat,
+    showNavanReminder,
+    reminderMonth,
     activePage: 'review',
   });
 });

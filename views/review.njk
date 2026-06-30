@@ -7,6 +7,12 @@
 window.CATEGORIES = {{ categoriesFlat | dump | safe }};
 </script>
 
+{% if showNavanReminder %}
+<div class="navan-reminder">
+  End of {{ reminderMonth }}: <a href="/reimbursements">upload your Navan report</a> to reconcile reimbursements
+</div>
+{% endif %}
+
 <div class="review-header">
   <h1>
     Review

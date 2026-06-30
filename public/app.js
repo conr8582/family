@@ -312,6 +312,74 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// ── Reimbursements — upload + confirm/undo ────────────────────────────────────
+
+const navanUploadBtn = document.querySelector('.navan-upload-btn');
+const navanFileInput = document.querySelector('.navan-file-input');
+const navanUploadMsg = document.querySelector('.navan-upload-msg');
+
+if (navanUploadBtn && navanFileInput) {
+  navanUploadBtn.addEventListener('click', () => navanFileInput.click());
+
+  navanFileInput.addEventListener('change', async () => {
+    const file = navanFileInput.files[0];
+    if (!file) return;
+
+    navanUploadBtn.disabled = true;
+    navanUploadBtn.textContent = 'Processing…';
+    navanUploadMsg.hidden = false;
+    navanUploadMsg.textContent = 'Reading screenshot…';
+
+    try {
+      const imageData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      navanUploadMsg.textContent = 'Sending to Claude for extraction…';
+
+      const res = await fetch('/api/reimbursements/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData, month: window.REIMB_MONTH }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+      navanUploadMsg.textContent = `Done — found ${data.navanCount} Navan transactions, matched ${data.matched} to your reimbursables.`;
+      setTimeout(() => window.location.reload(), 1800);
+    } catch (err) {
+      navanUploadMsg.textContent = `Error: ${err.message}`;
+      navanUploadBtn.disabled = false;
+      navanUploadBtn.textContent = 'Upload Navan screenshot';
+    }
+  });
+}
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.reimb-confirm-btn, .reimb-undo-btn');
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+  const isConfirm = btn.classList.contains('reimb-confirm-btn');
+  const endpoint = isConfirm ? 'confirm' : 'unconfirm';
+
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  try {
+    const res = await fetch(`/api/reimbursements/${id}/${endpoint}`, { method: 'POST' });
+    if (!res.ok) throw new Error();
+    window.location.reload();
+  } catch {
+    btn.disabled = false;
+    btn.textContent = isConfirm ? 'Confirm' : 'Undo';
+    alert('Could not update — please try again.');
+  }
+});
+
 // ── "What is this?" merchant lookup ──────────────────────────────────────────
 
 document.addEventListener('click', async (e) => {

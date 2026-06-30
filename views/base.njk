@@ -10,9 +10,10 @@
   <nav>
     <div class="inner">
       <a href="/" class="brand"><img src="/dog.jpg" alt="Finance" class="nav-dog"></a>
-      <a href="/"       class="{{ 'active' if activePage === 'review' }}">Review</a>
-      <a href="/budget" class="{{ 'active' if activePage === 'budget' }}">Budget</a>
-      <a href="/filed"  class="{{ 'active' if activePage === 'filed' }}">Filed</a>
+      <a href="/"              class="{{ 'active' if activePage === 'review' }}">Review</a>
+      <a href="/budget"        class="{{ 'active' if activePage === 'budget' }}">Budget</a>
+      <a href="/filed"         class="{{ 'active' if activePage === 'filed' }}">Filed</a>
+      <a href="/reimbursements" class="{{ 'active' if activePage === 'reimbursements' }}">Reimb.</a>
       <div class="spacer"></div>
       <button class="btn sync-btn" id="syncBtn">Sync</button>
       <form method="POST" action="/logout" style="display:inline">
