@@ -1,6 +1,9 @@
 {% extends "base.njk" %}
 
 {% block content %}
+<script>
+window.UNLINKED_EXPENSES = {{ unlinked | dump | safe }};
+</script>
 
 <div class="budget-header">
   <div class="month-nav">
@@ -63,12 +66,11 @@
 
     {% if unlinked.length > 0 %}
     <div class="payment-add-row">
-      <select class="reimb-expense-select" data-payment-id="{{ p.id }}">
-        <option value="">+ Add expense to this payment…</option>
-        {% for e in unlinked %}
-        <option value="{{ e.id }}">{{ e.date_display }} — {{ e.description | truncate(40) }} (${{ e.amount_display }})</option>
-        {% endfor %}
-      </select>
+      <div class="reimb-combobox" data-payment-id="{{ p.id }}">
+        <input type="text" class="reimb-expense-text" placeholder="+ Add expense to this payment…" autocomplete="off">
+        <input type="hidden" class="reimb-expense-id">
+        <ul class="reimb-expense-list" hidden></ul>
+      </div>
     </div>
     {% endif %}
 

@@ -312,31 +312,112 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// ── Reimbursements — link / unlink ───────────────────────────────────────────
+// ── Reimbursements — searchable expense combobox ─────────────────────────────
 
-// "Add expense to this payment" select (on the payment card)
-document.addEventListener('change', async (e) => {
-  const sel = e.target.closest('.reimb-expense-select');
-  if (!sel) return;
-  const paymentId = sel.dataset.paymentId;
-  const expenseId = sel.value;
-  if (!expenseId) return;
+function initReimbComboboxes() {
+  const expenses = window.UNLINKED_EXPENSES || [];
 
-  sel.disabled = true;
-  try {
-    const res = await fetch('/api/reimbursements/link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ expenseId, paymentId }),
+  document.querySelectorAll('.reimb-combobox').forEach(box => {
+    const textInput   = box.querySelector('.reimb-expense-text');
+    const hiddenInput = box.querySelector('.reimb-expense-id');
+    const list        = box.querySelector('.reimb-expense-list');
+    const paymentId   = box.dataset.paymentId;
+    let activeIdx     = -1;
+
+    function label(e) {
+      return `${e.date_display} — ${e.description} ($${e.amount_display})`;
+    }
+
+    function getMatches(q) {
+      if (!q) return expenses.slice(0, 50);
+      const lq = q.toLowerCase();
+      return expenses.filter(e =>
+        e.description.toLowerCase().includes(lq) ||
+        e.date_display.toLowerCase().includes(lq) ||
+        String(e.amount_display).includes(lq)
+      ).slice(0, 50);
+    }
+
+    function renderList(matches) {
+      list.innerHTML = '';
+      activeIdx = -1;
+      if (!matches.length) { list.hidden = true; return; }
+      matches.forEach(e => {
+        const li = document.createElement('li');
+        li.dataset.id = e.id;
+        li.textContent = label(e);
+        li.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          selectExpense(e);
+        });
+        list.appendChild(li);
+      });
+      list.hidden = false;
+    }
+
+    async function selectExpense(e) {
+      textInput.value   = label(e);
+      hiddenInput.value = e.id;
+      list.hidden       = true;
+      textInput.disabled = true;
+      textInput.value   = 'Linking…';
+      try {
+        const res = await fetch('/api/reimbursements/link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expenseId: e.id, paymentId }),
+        });
+        if (!res.ok) throw new Error();
+        window.location.reload();
+      } catch {
+        textInput.disabled = false;
+        textInput.value    = '';
+        hiddenInput.value  = '';
+        alert('Could not link expense — please try again.');
+      }
+    }
+
+    function highlight(idx) {
+      const items = list.querySelectorAll('li');
+      items.forEach(li => li.classList.remove('active'));
+      if (idx >= 0 && idx < items.length) {
+        items[idx].classList.add('active');
+        items[idx].scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    textInput.addEventListener('focus', () => renderList(getMatches(textInput.value)));
+    textInput.addEventListener('input', () => {
+      hiddenInput.value = '';
+      renderList(getMatches(textInput.value));
     });
-    if (!res.ok) throw new Error();
-    window.location.reload();
-  } catch {
-    sel.disabled = false;
-    sel.value = '';
-    alert('Could not link expense — please try again.');
-  }
-});
+    textInput.addEventListener('blur', () => {
+      setTimeout(() => { list.hidden = true; activeIdx = -1; }, 150);
+    });
+    textInput.addEventListener('keydown', e => {
+      const items = list.querySelectorAll('li');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, items.length - 1);
+        highlight(activeIdx);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        highlight(activeIdx);
+      } else if (e.key === 'Enter' && activeIdx >= 0) {
+        e.preventDefault();
+        const li = items[activeIdx];
+        const exp = expenses.find(x => String(x.id) === li.dataset.id);
+        if (exp) selectExpense(exp);
+      } else if (e.key === 'Escape') {
+        list.hidden = true;
+        activeIdx = -1;
+      }
+    });
+  });
+}
+
+initReimbComboboxes();
 
 // "Link to payment" select (on unlinked expense row)
 document.addEventListener('change', async (e) => {
