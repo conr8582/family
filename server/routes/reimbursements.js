@@ -29,13 +29,14 @@ router.get('/reimbursements', (req, res) => {
   const nextMonth = `${nextDate.getUTCFullYear()}-${String(nextDate.getUTCMonth() + 1).padStart(2, '0')}`;
   const isCurrentMonth = monthStr === nowStr;
 
-  // Payments received in the selected month
+  // Payments received in the selected month — Thumbtack and Navan only
   const paymentRows = db.prepare(`
     SELECT t.id, t.date, t.description, t.amount_cents, a.name AS account_name
     FROM transactions t
     JOIN accounts a ON a.id = t.account_id
     WHERE t.reimbursable = 'reimbursement'
       AND strftime('%Y-%m', t.date) = ?
+      AND (t.description LIKE '%THUMBTACK%' OR t.description LIKE '%NAVAN%')
     ORDER BY t.date DESC, t.id DESC
   `).all([monthStr]);
 
