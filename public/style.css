@@ -653,7 +653,7 @@ input:focus, select:focus, textarea:focus {
 
 .reimb-expense-text {
   width: 100%;
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   color: var(--muted);
   background: none;
   border: none;
@@ -675,19 +675,43 @@ input:focus, select:focus, textarea:focus {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  max-height: 260px;
+  max-height: 340px;
   overflow-y: auto;
   padding: 4px 0;
   margin: 0;
 }
 
 .reimb-expense-list li {
-  padding: 7px 14px;
-  font-size: 0.8125rem;
+  padding: 10px 14px;
+  font-size: 0.9375rem;
   cursor: pointer;
-  white-space: nowrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.reimb-expense-list li .ei-desc {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reimb-expense-list li .ei-date {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.reimb-expense-list li .ei-amt {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .reimb-expense-list li:hover,

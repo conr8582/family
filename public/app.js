@@ -345,7 +345,11 @@ function initReimbComboboxes() {
       matches.forEach(e => {
         const li = document.createElement('li');
         li.dataset.id = e.id;
-        li.textContent = label(e);
+        li.innerHTML = `
+          <span class="ei-date">${e.date_display}</span>
+          <span class="ei-desc">${e.description}</span>
+          <span class="ei-amt">$${e.amount_display}</span>
+        `;
         li.addEventListener('mousedown', ev => {
           ev.preventDefault();
           selectExpense(e);
