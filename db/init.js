@@ -26,14 +26,14 @@ const categories = [
   { name: 'Chef',                type: 'expense',  budget:   450_00, order: 24 },
 
   // Expenses — subscriptions
-  { name: 'Subscriptions',       type: 'expense',  budget:   150_00, order: 30 },
+  { name: 'Subscriptions',       type: 'expense',  budget:   200_00, order: 30 },
   { name: 'Tech Subscriptions',  type: 'expense',  budget:   100_00, order: 31 },
-  { name: 'Media Subscriptions', type: 'expense',  budget:    75_00, order: 32 },
+  { name: 'Media Subscriptions', type: 'expense',  budget:   125_00, order: 32 },
   { name: 'TV Subscriptions',    type: 'expense',  budget:   100_00, order: 33 },
 
   // Expenses — food
   { name: 'Groceries',              type: 'expense',  budget:   900_00, order: 40 },
-  { name: 'Dining Out',             type: 'expense',  budget:   500_00, order: 41 },
+  { name: 'Dining Out',             type: 'expense',  budget:   900_00, order: 41 },
   { name: 'Coffee / Drinks / Treats', type: 'expense', budget:  200_00, order: 42 },
 
   // Expenses — kids & family
@@ -46,7 +46,7 @@ const categories = [
   { name: 'Health',              type: 'expense',  budget:   800_00, order: 61 },
 
   // Expenses — lifestyle
-  { name: 'Shopping',            type: 'expense',  budget:   700_00, order: 70 },
+  { name: 'Shopping',            type: 'expense',  budget:   900_00, order: 70 },
   { name: 'Entertainment',       type: 'expense',  budget:   500_00, order: 71 },
   { name: 'Travel',              type: 'expense',  budget:         0, order: 72 },
   { name: 'ATM',                 type: 'expense',  budget:   300_00, order: 74 },

@@ -29,7 +29,10 @@ try { db.exec("ALTER TABLE transactions ADD COLUMN navan_status TEXT"); } catch 
 try { db.exec('ALTER TABLE transactions ADD COLUMN linked_reimbursement_id INTEGER REFERENCES transactions(id)'); } catch {}
 
 // Category updates
-db.exec(`UPDATE categories SET monthly_budget_cents = 50000 WHERE name = 'Dining Out'`);
+db.exec(`UPDATE categories SET monthly_budget_cents = 90000 WHERE name = 'Dining Out'`);
+db.exec(`UPDATE categories SET monthly_budget_cents = 90000 WHERE name = 'Shopping'`);
+db.exec(`UPDATE categories SET monthly_budget_cents = 20000 WHERE name = 'Subscriptions'`);
+db.exec(`UPDATE categories SET monthly_budget_cents = 12500 WHERE name = 'Media Subscriptions'`);
 db.exec(`UPDATE categories SET monthly_budget_cents = 400000 WHERE name = 'Baby Care'`);
 db.exec(`INSERT OR IGNORE INTO categories (name, type, monthly_budget_cents, sort_order) VALUES ('Coffee / Drinks / Treats', 'expense', 20000, 42)`);
 db.exec(`INSERT OR IGNORE INTO categories (name, type, monthly_budget_cents, sort_order) VALUES ('Chef', 'expense', 45000, 24)`);
