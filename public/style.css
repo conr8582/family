@@ -519,55 +519,159 @@ input:focus, select:focus, textarea:focus {
 .navan-reminder a:hover { text-decoration: underline; }
 
 /* ── Reimbursements page ──────────────────────────────────────── */
-.navan-upload-area {
-  margin-bottom: 28px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
+.reimb-section { margin-bottom: 28px; }
+
+.reimb-empty {
+  color: var(--muted);
+  font-size: 0.875rem;
+  padding: 12px 0 20px;
 }
 
-.navan-upload-inner {
+/* Payment cards */
+.payment-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.payment-card--settled { border-left: 3px solid var(--green); }
+.payment-card--owed    { border-left: 3px solid #d97706; }
+.payment-card--surplus { border-left: 3px solid var(--accent); }
+
+.payment-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
+  padding: 12px 14px;
   flex-wrap: wrap;
 }
 
-.navan-upload-prompt { color: var(--muted); font-size: 0.875rem; }
-.navan-upload-done   { font-size: 0.875rem; color: var(--green); font-weight: 500; }
-
-.navan-upload-msg {
-  margin-top: 10px;
-  font-size: 0.875rem;
-  color: var(--muted);
-  font-style: italic;
+.payment-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
 }
 
-.reimb-section { margin-bottom: 28px; }
+.payment-date { color: var(--muted); font-size: 0.8125rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.payment-desc { font-size: 0.9375rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.payment-acct { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
 
-.reimb-heading-green { color: var(--green); }
-.reimb-heading-amber { color: #d97706; }
+.payment-totals {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
 
+.payment-received { color: var(--muted); white-space: nowrap; }
+.payment-received strong { color: var(--text); }
+
+.payment-delta { font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+.payment-delta--settled { color: var(--green); }
+.payment-delta--owed    { color: #d97706; }
+.payment-delta--surplus { color: var(--accent); }
+
+/* Linked expenses inside a payment card */
+.payment-expenses {
+  border-top: 1px solid var(--border);
+  padding: 0 14px;
+}
+
+.linked-expense {
+  display: grid;
+  grid-template-columns: 56px 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8125rem;
+}
+
+.linked-date { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.linked-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.linked-acct { color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
+.linked-amt  { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+
+.reimb-unlink-btn {
+  all: unset;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.reimb-unlink-btn:hover { color: var(--red); background: var(--bg); }
+
+.linked-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.linked-total-amt { font-variant-numeric: tabular-nums; color: var(--text); }
+
+/* Add expense select on payment card */
+.payment-add-row {
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+}
+
+.payment-add-row select {
+  width: 100%;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+/* Unlinked expenses list */
 .reimb-item {
   display: grid;
-  grid-template-columns: 64px 1fr auto auto auto;
+  grid-template-columns: 56px 1fr auto auto auto;
   gap: 12px;
   align-items: center;
-  padding: 8px 0;
+  padding: 9px 0;
   border-bottom: 1px solid var(--border);
   font-size: 0.875rem;
 }
 
 .reimb-item:last-child { border-bottom: none; }
 
-.reimb-item-green { border-left: 3px solid var(--green); padding-left: 10px; }
-.reimb-item-amber { border-left: 3px solid #d97706; padding-left: 10px; }
+.reimb-item--old .reimb-desc { color: #d97706; }
 
 .reimb-date { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .reimb-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .reimb-acct { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
 .reimb-amt  { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+
+.reimb-old-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #d97706;
+  background: #fef3c7;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.reimb-link-select {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  padding: 5px 8px;
+  width: auto;
+  min-width: 160px;
+}
 
 .reimb-all-done {
   padding: 40px 0;
@@ -576,10 +680,19 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 640px) {
+  .payment-meta { flex-wrap: wrap; }
+  .payment-acct { display: none; }
+
+  .linked-expense {
+    grid-template-columns: 52px 1fr auto auto;
+  }
+  .linked-acct { display: none; }
+
   .reimb-item {
     grid-template-columns: 52px 1fr auto auto;
   }
   .reimb-acct { display: none; }
+  .reimb-link-select { min-width: 120px; }
 }
 
 /* ── Merchant lookup ──────────────────────────────────────────── */

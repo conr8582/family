@@ -19,7 +19,7 @@ function startOfCurrentMonth() {
 
 // Core sync function. Fetches from SimpleFIN and persists new transactions.
 // Returns a result summary object.
-async function runSync() {
+async function runSync({ fromDate } = {}) {
   if (!getAccessUrl()) {
     throw new Error('SimpleFIN not configured — run the backfill script first.');
   }
@@ -27,9 +27,11 @@ async function runSync() {
   // Overlap 48h with the last sync to catch late-posting transactions.
   // INSERT OR IGNORE handles any duplicates automatically.
   const lastSyncedAt = getSetting('last_synced_at');
-  const startDate = lastSyncedAt
-    ? new Date(new Date(lastSyncedAt).getTime() - 48 * 60 * 60 * 1000)
-    : startOfCurrentMonth();
+  const startDate = fromDate
+    ? new Date(fromDate)
+    : lastSyncedAt
+      ? new Date(new Date(lastSyncedAt).getTime() - 48 * 60 * 60 * 1000)
+      : startOfCurrentMonth();
 
   const now = new Date();
   const payload = await fetchAccounts(startDate, now);

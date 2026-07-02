@@ -26,6 +26,14 @@ db.exec('PRAGMA foreign_keys = ON');
 // Idempotent migrations
 try { db.exec('ALTER TABLE transactions ADD COLUMN notes_auto TEXT'); } catch {}
 try { db.exec("ALTER TABLE transactions ADD COLUMN navan_status TEXT"); } catch {}
+try { db.exec('ALTER TABLE transactions ADD COLUMN linked_reimbursement_id INTEGER REFERENCES transactions(id)'); } catch {}
+
+// Category updates
+db.exec(`UPDATE categories SET monthly_budget_cents = 50000 WHERE name = 'Dining Out'`);
+db.exec(`UPDATE categories SET monthly_budget_cents = 400000 WHERE name = 'Baby Care'`);
+db.exec(`INSERT OR IGNORE INTO categories (name, type, monthly_budget_cents, sort_order) VALUES ('Coffee / Drinks / Treats', 'expense', 20000, 42)`);
+db.exec(`INSERT OR IGNORE INTO categories (name, type, monthly_budget_cents, sort_order) VALUES ('Chef', 'expense', 45000, 24)`);
+db.exec(`DELETE FROM categories WHERE name = 'Caroline Card'`);
 
 // Close cleanly on process exit so the lock is always released
 process.on('exit', () => { try { db.close(); } catch {} });

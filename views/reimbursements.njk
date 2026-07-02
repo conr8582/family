@@ -1,7 +1,6 @@
 {% extends "base.njk" %}
 
 {% block content %}
-<script>window.REIMB_MONTH = "{{ monthStr }}";</script>
 
 <div class="budget-header">
   <div class="month-nav">
@@ -15,90 +14,96 @@
   </div>
 </div>
 
-{# ── Navan upload area ───────────────────────────────────────── #}
-<div class="navan-upload-area">
-  <div class="navan-upload-inner">
-    {% if reportUploaded %}
-      <span class="navan-upload-done">Navan report processed for {{ monthLabel }}</span>
-      <button class="btn navan-upload-btn" type="button">Upload another screenshot</button>
-    {% else %}
-      <span class="navan-upload-prompt">No Navan report uploaded for {{ monthLabel }}</span>
-      <button class="btn btn-primary navan-upload-btn" type="button">Upload Navan screenshot</button>
+{# ── Payments received ─────────────────────────────────────────── #}
+<section class="reimb-section" style="margin-bottom: 40px;">
+  <h2 class="section-heading">Payments received ({{ payments.length }})</h2>
+
+  {% if payments.length === 0 %}
+    <p class="reimb-empty">No reimbursement payments in {{ monthLabel }}. Tag an income transaction as <strong>Reimbursement</strong> during daily review to add one.</p>
+  {% endif %}
+
+  {% for p in payments %}
+  <div class="payment-card payment-card--{{ p.delta_type }}" data-payment-id="{{ p.id }}">
+
+    <div class="payment-header">
+      <div class="payment-meta">
+        <span class="payment-date">{{ p.date_display }}</span>
+        <span class="payment-desc">{{ p.description }}</span>
+        <span class="payment-acct">{{ p.account_name | shortAccount }}</span>
+      </div>
+      <div class="payment-totals">
+        <span class="payment-received">Received <strong>${{ p.amount_display }}</strong></span>
+        {% if p.delta_type === 'settled' %}
+          <span class="payment-delta payment-delta--settled">&#10003; Zeroes out</span>
+        {% elif p.delta_type === 'owed' %}
+          <span class="payment-delta payment-delta--owed">Still owed ${{ p.delta_display }}</span>
+        {% else %}
+          <span class="payment-delta payment-delta--surplus">+${{ p.delta_display }} surplus</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if p.linked.length > 0 %}
+    <div class="payment-expenses">
+      {% for e in p.linked %}
+      <div class="linked-expense" data-expense-id="{{ e.id }}">
+        <span class="linked-date">{{ e.date_display }}</span>
+        <span class="linked-desc">{{ e.description }}</span>
+        <span class="linked-acct">{{ e.account_name | shortAccount }}</span>
+        <span class="linked-amt">${{ e.amount_display }}</span>
+        <button class="reimb-unlink-btn" type="button" data-expense-id="{{ e.id }}" title="Unlink">&#215;</button>
+      </div>
+      {% endfor %}
+      <div class="linked-total">
+        <span>Linked total</span>
+        <span class="linked-total-amt">${{ (p.linked_cents / 100).toFixed(2) }}</span>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if unlinked.length > 0 %}
+    <div class="payment-add-row">
+      <select class="reimb-expense-select" data-payment-id="{{ p.id }}">
+        <option value="">+ Add expense to this payment…</option>
+        {% for e in unlinked %}
+        <option value="{{ e.id }}">{{ e.date_display }} — {{ e.description | truncate(40) }} (${{ e.amount_display }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endfor %}
+</section>
+
+{# ── Unlinked expenses ─────────────────────────────────────────── #}
+{% if unlinked.length > 0 %}
+<section class="reimb-section">
+  <h2 class="section-heading">Unlinked expenses ({{ unlinked.length }})</h2>
+
+  {% for e in unlinked %}
+  <div class="reimb-item{% if e.is_old %} reimb-item--old{% endif %}" data-expense-id="{{ e.id }}">
+    <span class="reimb-date">{{ e.date_display }}</span>
+    <span class="reimb-desc">
+      {{ e.description }}
+      {% if e.is_old %}<span class="reimb-old-tag">follow up?</span>{% endif %}
+    </span>
+    <span class="reimb-acct">{{ e.account_name | shortAccount }}</span>
+    <span class="reimb-amt">${{ e.amount_display }}</span>
+    {% if payments.length > 0 %}
+    <select class="reimb-link-select" data-expense-id="{{ e.id }}">
+      <option value="">Link to payment…</option>
+      {% for p in payments %}
+      <option value="{{ p.id }}">{{ p.date_display }} — {{ p.description | truncate(40) }} (${{ p.amount_display }})</option>
+      {% endfor %}
+    </select>
     {% endif %}
   </div>
-  <p class="navan-upload-msg" hidden></p>
-  <input type="file" class="navan-file-input" accept="image/*" hidden>
-</div>
+  {% endfor %}
+</section>
 
-{% if total === 0 %}
-  <div class="empty-state"><p>No reimbursable transactions for {{ monthLabel }}.</p></div>
-{% else %}
-
-  {# ── Confirmed reimbursed ─────────────────────────────────── #}
-  {% if reimbursed.length > 0 %}
-  <section class="reimb-section">
-    <h2 class="section-heading reimb-heading-green">Confirmed reimbursed ({{ reimbursed.length }})</h2>
-    {% for tx in reimbursed %}
-    <div class="reimb-item reimb-item-green" data-id="{{ tx.id }}">
-      <span class="reimb-date">{{ tx.date_display }}</span>
-      <span class="reimb-desc">{{ tx.description }}</span>
-      <span class="reimb-acct">{{ tx.account_name | shortAccount }}</span>
-      <span class="reimb-amt">${{ tx.amount_display }}</span>
-      <button class="btn reimb-undo-btn" type="button" data-id="{{ tx.id }}">Undo</button>
-    </div>
-    {% endfor %}
-  </section>
-  {% endif %}
-
-  {# ── Pending ──────────────────────────────────────────────── #}
-  {% if pending.length > 0 %}
-  <section class="reimb-section">
-    <h2 class="section-heading reimb-heading-amber">Submitted, awaiting payment ({{ pending.length }})</h2>
-    {% for tx in pending %}
-    <div class="reimb-item reimb-item-amber" data-id="{{ tx.id }}">
-      <span class="reimb-date">{{ tx.date_display }}</span>
-      <span class="reimb-desc">{{ tx.description }}</span>
-      <span class="reimb-acct">{{ tx.account_name | shortAccount }}</span>
-      <span class="reimb-amt">${{ tx.amount_display }}</span>
-      <button class="btn reimb-undo-btn" type="button" data-id="{{ tx.id }}">Undo</button>
-    </div>
-    {% endfor %}
-  </section>
-  {% endif %}
-
-  {# ── Manually confirmed ───────────────────────────────────── #}
-  {% if manual.length > 0 %}
-  <section class="reimb-section">
-    <h2 class="section-heading">Manually confirmed ({{ manual.length }})</h2>
-    {% for tx in manual %}
-    <div class="reimb-item" data-id="{{ tx.id }}">
-      <span class="reimb-date">{{ tx.date_display }}</span>
-      <span class="reimb-desc">{{ tx.description }}</span>
-      <span class="reimb-acct">{{ tx.account_name | shortAccount }}</span>
-      <span class="reimb-amt">${{ tx.amount_display }}</span>
-      <button class="btn reimb-undo-btn" type="button" data-id="{{ tx.id }}">Undo</button>
-    </div>
-    {% endfor %}
-  </section>
-  {% endif %}
-
-  {# ── Unconfirmed ──────────────────────────────────────────── #}
-  {% if unconfirmed.length > 0 %}
-  <section class="reimb-section">
-    <h2 class="section-heading">Unconfirmed ({{ unconfirmed.length }})</h2>
-    {% for tx in unconfirmed %}
-    <div class="reimb-item" data-id="{{ tx.id }}">
-      <span class="reimb-date">{{ tx.date_display }}</span>
-      <span class="reimb-desc">{{ tx.description }}</span>
-      <span class="reimb-acct">{{ tx.account_name | shortAccount }}</span>
-      <span class="reimb-amt">${{ tx.amount_display }}</span>
-      <button class="btn btn-primary reimb-confirm-btn" type="button" data-id="{{ tx.id }}">Confirm</button>
-    </div>
-    {% endfor %}
-  </section>
-  {% else %}
-  <p class="reimb-all-done">All {{ total }} transactions reconciled for {{ monthLabel }}.</p>
-  {% endif %}
-
+{% elif payments.length > 0 %}
+  <p class="reimb-all-done">All reimbursable expenses are linked. &#10003;</p>
 {% endif %}
+
 {% endblock %}

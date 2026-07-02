@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   notes         TEXT,
   notes_auto    TEXT,                       -- cached AI merchant lookup result
   navan_status  TEXT,                       -- null / 'reimbursed' / 'pending' / 'manual'
+  linked_reimbursement_id INTEGER REFERENCES transactions(id), -- payment tx this expense is matched to
   created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 

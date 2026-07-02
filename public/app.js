@@ -312,71 +312,72 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// ── Reimbursements — upload + confirm/undo ────────────────────────────────────
+// ── Reimbursements — link / unlink ───────────────────────────────────────────
 
-const navanUploadBtn = document.querySelector('.navan-upload-btn');
-const navanFileInput = document.querySelector('.navan-file-input');
-const navanUploadMsg = document.querySelector('.navan-upload-msg');
+// "Add expense to this payment" select (on the payment card)
+document.addEventListener('change', async (e) => {
+  const sel = e.target.closest('.reimb-expense-select');
+  if (!sel) return;
+  const paymentId = sel.dataset.paymentId;
+  const expenseId = sel.value;
+  if (!expenseId) return;
 
-if (navanUploadBtn && navanFileInput) {
-  navanUploadBtn.addEventListener('click', () => navanFileInput.click());
+  sel.disabled = true;
+  try {
+    const res = await fetch('/api/reimbursements/link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expenseId, paymentId }),
+    });
+    if (!res.ok) throw new Error();
+    window.location.reload();
+  } catch {
+    sel.disabled = false;
+    sel.value = '';
+    alert('Could not link expense — please try again.');
+  }
+});
 
-  navanFileInput.addEventListener('change', async () => {
-    const file = navanFileInput.files[0];
-    if (!file) return;
+// "Link to payment" select (on unlinked expense row)
+document.addEventListener('change', async (e) => {
+  const sel = e.target.closest('.reimb-link-select');
+  if (!sel) return;
+  const expenseId = sel.dataset.expenseId;
+  const paymentId = sel.value;
+  if (!paymentId) return;
 
-    navanUploadBtn.disabled = true;
-    navanUploadBtn.textContent = 'Processing…';
-    navanUploadMsg.hidden = false;
-    navanUploadMsg.textContent = 'Reading screenshot…';
+  sel.disabled = true;
+  try {
+    const res = await fetch('/api/reimbursements/link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expenseId, paymentId }),
+    });
+    if (!res.ok) throw new Error();
+    window.location.reload();
+  } catch {
+    sel.disabled = false;
+    sel.value = '';
+    alert('Could not link expense — please try again.');
+  }
+});
 
-    try {
-      const imageData = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      navanUploadMsg.textContent = 'Sending to Claude for extraction…';
-
-      const res = await fetch('/api/reimbursements/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageData, month: window.REIMB_MONTH }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-
-      navanUploadMsg.textContent = `Done — found ${data.navanCount} Navan transactions, matched ${data.matched} to your reimbursables.`;
-      setTimeout(() => window.location.reload(), 1800);
-    } catch (err) {
-      navanUploadMsg.textContent = `Error: ${err.message}`;
-      navanUploadBtn.disabled = false;
-      navanUploadBtn.textContent = 'Upload Navan screenshot';
-    }
-  });
-}
-
+// × unlink button on a linked expense row
 document.addEventListener('click', async (e) => {
-  const btn = e.target.closest('.reimb-confirm-btn, .reimb-undo-btn');
+  const btn = e.target.closest('.reimb-unlink-btn');
   if (!btn) return;
-
-  const id = btn.dataset.id;
-  const isConfirm = btn.classList.contains('reimb-confirm-btn');
-  const endpoint = isConfirm ? 'confirm' : 'unconfirm';
+  const expenseId = btn.dataset.expenseId;
 
   btn.disabled = true;
   btn.textContent = '…';
-
   try {
-    const res = await fetch(`/api/reimbursements/${id}/${endpoint}`, { method: 'POST' });
+    const res = await fetch(`/api/reimbursements/unlink/${expenseId}`, { method: 'POST' });
     if (!res.ok) throw new Error();
     window.location.reload();
   } catch {
     btn.disabled = false;
-    btn.textContent = isConfirm ? 'Confirm' : 'Undo';
-    alert('Could not update — please try again.');
+    btn.textContent = '×';
+    alert('Could not unlink — please try again.');
   }
 });
 

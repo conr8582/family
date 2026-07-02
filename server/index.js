@@ -55,7 +55,11 @@ app.use(requireAuth);
 
 app.post('/api/sync', async (req, res) => {
   try {
-    const result = await runSync();
+    const fromDate = req.query.from ? new Date(req.query.from) : undefined;
+    if (fromDate && isNaN(fromDate.getTime())) {
+      return res.status(400).json({ ok: false, error: 'Invalid ?from= date.' });
+    }
+    const result = await runSync({ fromDate });
     res.json({ ok: true, ...result });
   } catch (err) {
     console.error('[/api/sync]', err.message);
