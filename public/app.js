@@ -410,25 +410,50 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// ── Sync button ───────────────────────────────────────────────────────────────
+// ── Sync button + last-synced status ─────────────────────────────────────────
 
-const syncBtn = document.getElementById('syncBtn');
+function formatSyncTime(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 2)   return 'Synced just now';
+  if (mins < 60)  return `Synced ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)   return `Synced ${hrs}h ago`;
+  return `Synced ${Math.floor(hrs / 24)}d ago`;
+}
+
+const syncBtn    = document.getElementById('syncBtn');
+const syncStatus = document.getElementById('syncStatus');
+
+// Load last-synced time on every page
+if (syncStatus) {
+  fetch('/api/sync/status')
+    .then(r => r.json())
+    .then(d => { if (d.lastSyncedAt) syncStatus.textContent = formatSyncTime(d.lastSyncedAt); })
+    .catch(() => {});
+}
+
 if (syncBtn) {
   syncBtn.addEventListener('click', async () => {
     syncBtn.classList.add('syncing');
     syncBtn.textContent = 'Syncing…';
+    if (syncStatus) syncStatus.textContent = '';
     try {
       const res  = await fetch('/api/sync', { method: 'POST' });
       const data = await res.json();
       if (data.txAdded > 0) {
         window.location.reload();
       } else {
-        syncBtn.textContent = 'Up to date';
-        setTimeout(() => { syncBtn.textContent = 'Sync'; syncBtn.classList.remove('syncing'); }, 2000);
+        syncBtn.textContent = 'Sync';
+        syncBtn.classList.remove('syncing');
+        if (syncStatus) syncStatus.textContent = `Synced just now · ${data.txSkipped} already up to date`;
       }
     } catch {
       syncBtn.textContent = 'Sync';
       syncBtn.classList.remove('syncing');
+      if (syncStatus) syncStatus.textContent = 'Sync failed';
     }
   });
 }

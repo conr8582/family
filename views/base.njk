@@ -16,6 +16,7 @@
       <a href="/filed"         class="{{ 'active' if activePage === 'filed' }}">Filed</a>
       <a href="/reimbursements" class="{{ 'active' if activePage === 'reimbursements' }}">Reimb.</a>
       <div class="spacer"></div>
+      <span class="sync-status" id="syncStatus"></span>
       <button class="btn sync-btn" id="syncBtn">Sync</button>
       <form method="POST" action="/logout" style="display:inline">
         <button class="btn">Sign out</button>

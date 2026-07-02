@@ -10,6 +10,7 @@ const reviewRouter = require('./routes/review');
 const budgetRouter = require('./routes/budget');
 const reimbursementsRouter = require('./routes/reimbursements');
 const { lookupTransaction } = require('./lookup');
+const db = require('../db/client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +53,11 @@ app.post('/logout', handleLogout);
 
 // ── Auth wall — everything below requires a valid session ─────────────────────
 app.use(requireAuth);
+
+app.get('/api/sync/status', (req, res) => {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'last_synced_at'").get([]);
+  res.json({ lastSyncedAt: row ? row.value : null });
+});
 
 app.post('/api/sync', async (req, res) => {
   try {

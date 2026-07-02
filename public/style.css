@@ -303,6 +303,12 @@ input:focus, select:focus, textarea:focus {
 /* ── Sync feedback ────────────────────────────────────────── */
 .sync-btn.syncing { opacity: 0.6; pointer-events: none; }
 
+.sync-status {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 /* ── Budget screen ────────────────────────────────────────── */
 .budget-header { margin-bottom: 8px; padding-top: 8px; }
 
