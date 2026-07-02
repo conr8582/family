@@ -381,6 +381,35 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// ── Filed — description search filter ────────────────────────────────────────
+
+const filedSearch = document.getElementById('filedSearch');
+if (filedSearch) {
+  filedSearch.addEventListener('input', () => {
+    const q = filedSearch.value.trim().toLowerCase();
+    let visible = 0;
+
+    document.querySelectorAll('#filedList .date-group').forEach(group => {
+      let groupVisible = 0;
+      group.querySelectorAll('.tx-row').forEach(row => {
+        const desc = row.querySelector('.tx-desc')?.textContent.toLowerCase() || '';
+        const show = !q || desc.includes(q);
+        row.hidden = !show;
+        if (show) groupVisible++;
+      });
+      group.hidden = groupVisible === 0;
+      visible += groupVisible;
+    });
+
+    const badge = document.getElementById('filedCount');
+    if (badge) badge.textContent = q ? visible : badge.dataset.total || visible;
+  });
+
+  // Store total so we can restore it when search is cleared
+  const badge = document.getElementById('filedCount');
+  if (badge) badge.dataset.total = badge.textContent;
+}
+
 // ── "What is this?" merchant lookup ──────────────────────────────────────────
 
 document.addEventListener('click', async (e) => {

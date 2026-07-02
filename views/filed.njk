@@ -9,9 +9,22 @@ window.CATEGORIES = {{ categoriesFlat | dump | safe }};
 <div class="review-header">
   <h1>
     Filed
-    <span class="badge" style="background: var(--muted)">{{ total }}</span>
+    <span class="badge" style="background: var(--muted)" id="filedCount">{{ total }}</span>
   </h1>
 </div>
+
+{% if total > 0 %}
+<div class="filed-search-wrap">
+  <input
+    type="search"
+    id="filedSearch"
+    class="filed-search"
+    placeholder="Search transactions…"
+    autocomplete="off"
+    autofocus
+  >
+</div>
+{% endif %}
 
 {% if total === 0 %}
   <div class="empty-state"><p>No filed transactions yet.</p></div>

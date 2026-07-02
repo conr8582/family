@@ -156,8 +156,22 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ── Review screen ────────────────────────────────────────── */
-.review-header { margin-bottom: 28px; padding-top: 8px; }
+.review-header { margin-bottom: 20px; padding-top: 8px; }
 .review-header h1 { display: flex; align-items: center; }
+
+.filed-search-wrap { margin-bottom: 24px; }
+.filed-search {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 12px;
+  font-size: 0.9375rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+.filed-search:focus { border-color: var(--accent); }
 
 .empty-state {
   padding: 60px 0;
