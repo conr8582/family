@@ -9,7 +9,7 @@
 </head>
 <body>
   <nav>
-    <div class="inner">
+    <div class="inner{% if activePage === 'reimbursements' %} inner--wide{% endif %}">
       <a href="/" class="brand"><img src="/dog.jpg" alt="Finance" class="nav-dog"></a>
       <a href="/"              class="{{ 'active' if activePage === 'review' }}">Review</a>
       <a href="/budget"        class="{{ 'active' if activePage === 'budget' }}">Budget</a>
@@ -23,7 +23,7 @@
       </form>
     </div>
   </nav>
-  <div class="container">
+  <div class="container{% if activePage === 'reimbursements' %} container--wide{% endif %}">
     {% block content %}{% endblock %}
   </div>
   <script src="/app.js"></script>

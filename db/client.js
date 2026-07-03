@@ -27,6 +27,7 @@ db.exec('PRAGMA foreign_keys = ON');
 try { db.exec('ALTER TABLE transactions ADD COLUMN notes_auto TEXT'); } catch {}
 try { db.exec("ALTER TABLE transactions ADD COLUMN navan_status TEXT"); } catch {}
 try { db.exec('ALTER TABLE transactions ADD COLUMN linked_reimbursement_id INTEGER REFERENCES transactions(id)'); } catch {}
+try { db.exec('ALTER TABLE transactions ADD COLUMN reimb_closed INTEGER NOT NULL DEFAULT 0'); } catch {}
 
 // Category updates
 db.exec(`UPDATE categories SET monthly_budget_cents = 90000 WHERE name = 'Dining Out'`);

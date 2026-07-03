@@ -33,6 +33,9 @@ body {
   padding: 0 24px;
 }
 
+.container--wide { max-width: 1180px; }
+.inner--wide { max-width: 1180px; }
+
 /* ── Nav ──────────────────────────────────────────────────── */
 nav {
   border-bottom: 1px solid var(--border);
@@ -642,18 +645,46 @@ input:focus, select:focus, textarea:focus {
 
 /* Add expense select on payment card */
 .payment-add-row {
-  border-top: 1px solid var(--border);
-  padding: 10px 14px;
+  padding: 10px 14px 12px;
 }
 
 .reimb-combobox {
   position: relative;
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1.5px dashed var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
+.reimb-combobox:hover {
+  border-color: #c7c7c2;
+}
+
+.reimb-combobox:focus-within {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.reimb-combobox-icon {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.reimb-combobox:focus-within .reimb-combobox-icon { color: var(--accent); }
+
 .reimb-expense-text {
-  width: 100%;
-  font-size: 0.9375rem;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
   color: var(--muted);
   background: none;
   border: none;
@@ -666,9 +697,9 @@ input:focus, select:focus, textarea:focus {
 
 .reimb-expense-list {
   position: absolute;
-  bottom: calc(100% + 6px);
-  left: -14px;
-  right: -14px;
+  bottom: calc(100% + 8px);
+  left: -1px;
+  right: -1px;
   z-index: 200;
   list-style: none;
   background: var(--surface);
@@ -719,25 +750,28 @@ input:focus, select:focus, textarea:focus {
   background: var(--bg);
 }
 
-/* Unlinked expenses list */
+/* Unlinked expenses list — stacked cards in the sidebar column */
 .reimb-item {
-  display: grid;
-  grid-template-columns: 56px 1fr auto auto auto;
-  gap: 12px;
-  align-items: center;
-  padding: 9px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--border);
   font-size: 0.875rem;
 }
 
 .reimb-item:last-child { border-bottom: none; }
 
+.reimb-item-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .reimb-item--old .reimb-desc { color: #d97706; }
 
-.reimb-date { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.reimb-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.reimb-acct { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
-.reimb-amt  { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.reimb-date { color: var(--muted); font-size: 0.8rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.reimb-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.reimb-acct { display: block; color: var(--muted); font-size: 0.75rem; white-space: nowrap; margin-bottom: 6px; }
+.reimb-amt  { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; font-weight: 500; }
 
 .reimb-old-tag {
   display: inline-block;
@@ -756,8 +790,7 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.8125rem;
   color: var(--muted);
   padding: 5px 8px;
-  width: auto;
-  min-width: 160px;
+  width: 100%;
 }
 
 .reimb-all-done {
@@ -774,13 +807,79 @@ input:focus, select:focus, textarea:focus {
     grid-template-columns: 52px 1fr auto auto;
   }
   .linked-acct { display: none; }
-
-  .reimb-item {
-    grid-template-columns: 52px 1fr auto auto;
-  }
-  .reimb-acct { display: none; }
-  .reimb-link-select { min-width: 120px; }
 }
+
+/* ── Reimbursements — tabs ────────────────────────────────────── */
+.reimb-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.reimb-tab {
+  display: inline-block;
+  padding: 8px 4px;
+  margin-bottom: -1px;
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-right: 20px;
+}
+
+.reimb-tab:hover { color: var(--text); }
+.reimb-tab.active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+
+/* ── Reimbursements — two-column layout ──────────────────────── */
+.reimb-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.reimb-col-side {
+  position: sticky;
+  top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 16px;
+}
+
+@media (max-width: 860px) {
+  .reimb-layout { grid-template-columns: 1fr; }
+  .reimb-col-side { position: static; }
+}
+
+/* ── Closed reimbursements ────────────────────────────────────── */
+.payment-card--closed { opacity: 0.85; }
+.payment-card--closed[open] { opacity: 1; }
+
+.payment-header--closed {
+  cursor: pointer;
+  list-style: none;
+}
+.payment-header--closed::-webkit-details-marker { display: none; }
+
+.payment-card--closed .payment-desc,
+.payment-card--closed .payment-date { font-size: 0.875rem; }
+
+.reimb-close-btn,
+.reimb-reopen-btn {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.reimb-close-btn:hover { color: var(--text); border-color: var(--text); }
+.reimb-reopen-btn:hover { color: var(--accent); border-color: var(--accent); }
 
 /* ── Merchant lookup ──────────────────────────────────────────── */
 .tx-lookup-btn {

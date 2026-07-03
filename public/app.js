@@ -466,6 +466,45 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// "Close" button on an open payment card — files it under the Closed tab
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.reimb-close-btn');
+  if (!btn) return;
+  const paymentId = btn.dataset.paymentId;
+
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    const res = await fetch(`/api/reimbursements/close/${paymentId}`, { method: 'POST' });
+    if (!res.ok) throw new Error();
+    window.location.reload();
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Close';
+    alert('Could not close — please try again.');
+  }
+});
+
+// "Reopen" button on a closed payment card
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.reimb-reopen-btn');
+  if (!btn) return;
+  e.preventDefault(); // don't let the click also toggle the <details> disclosure
+  const paymentId = btn.dataset.paymentId;
+
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    const res = await fetch(`/api/reimbursements/reopen/${paymentId}`, { method: 'POST' });
+    if (!res.ok) throw new Error();
+    window.location.reload();
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Reopen';
+    alert('Could not reopen — please try again.');
+  }
+});
+
 // ── Filed — description search filter ────────────────────────────────────────
 
 const filedSearch = document.getElementById('filedSearch');

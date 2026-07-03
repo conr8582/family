@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   notes_auto    TEXT,                       -- cached AI merchant lookup result
   navan_status  TEXT,                       -- null / 'reimbursed' / 'pending' / 'manual'
   linked_reimbursement_id INTEGER REFERENCES transactions(id), -- payment tx this expense is matched to
+  reimb_closed  INTEGER NOT NULL DEFAULT 0, -- 1 = reimbursement payment has been closed out (only meaningful when reimbursable = 'reimbursement')
   created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
