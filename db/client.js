@@ -37,7 +37,7 @@ db.exec(`UPDATE categories SET monthly_budget_cents = 12500 WHERE name = 'Media 
 db.exec(`UPDATE categories SET monthly_budget_cents = 400000 WHERE name = 'Baby Care'`);
 db.exec(`INSERT OR IGNORE INTO categories (name, type, monthly_budget_cents, sort_order) VALUES ('Coffee / Drinks / Treats', 'expense', 20000, 42)`);
 db.exec(`INSERT OR IGNORE INTO categories (name, type, monthly_budget_cents, sort_order) VALUES ('Chef', 'expense', 45000, 24)`);
-db.exec(`DELETE FROM categories WHERE name = 'Caroline Card'`);
+db.exec(`INSERT OR IGNORE INTO categories (name, type, monthly_budget_cents, sort_order) VALUES ('Caroline Card', 'expense', 170000, 25)`);
 
 // Close cleanly on process exit so the lock is always released
 process.on('exit', () => { try { db.close(); } catch {} });
