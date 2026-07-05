@@ -46,8 +46,8 @@ router.get('/budget', (req, res) => {
     LEFT JOIN transactions t
       ON  t.category_id = c.id
       AND strftime('%Y-%m', t.date) = ?
-    WHERE c.active = 1
     GROUP BY c.id
+    HAVING c.active = 1 OR actual_cents <> 0
     ORDER BY c.sort_order
   `).all([monthStr]);
 
