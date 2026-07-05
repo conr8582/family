@@ -30,17 +30,48 @@ function groupByDate(txList) {
   return groups;
 }
 
+// Finds the most recent reviewed transaction with the same description,
+// amount, and account — used to carry a recurring charge's category/note
+// forward (e.g. the same Apple subscription line item billed next month).
+const matchPriorReviewed = db.prepare(`
+  SELECT category_id, notes, date
+  FROM transactions
+  WHERE description = ?
+    AND amount_cents = ?
+    AND account_id = ?
+    AND reviewed = 1
+    AND category_id IS NOT NULL
+    AND id != ?
+  ORDER BY date DESC, id DESC
+  LIMIT 1
+`);
+
+function shortDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 // ── GET / — review screen (unreviewed transactions) ───────────────────────────
 router.get('/', (req, res) => {
   const rawTx = db.prepare(`
     SELECT t.id, t.date, t.description, t.amount_cents,
            t.category_id, t.reimbursable, t.notes,
-           a.name AS account_name
+           t.account_id, a.name AS account_name
     FROM transactions t
     JOIN accounts a ON a.id = t.account_id
     WHERE t.reviewed = 0
     ORDER BY t.date DESC, t.id DESC
-  `).all([]);
+  `).all([]).map(tx => {
+    if (tx.category_id) return tx; // already tagged — nothing to suggest
+    const match = matchPriorReviewed.get([tx.description, tx.amount_cents, tx.account_id, tx.id]);
+    if (!match) return tx;
+    return {
+      ...tx,
+      suggested_category_id: match.category_id,
+      suggested_notes: match.notes,
+      suggested_date_display: shortDate(match.date),
+    };
+  });
 
   const { flat, byType } = getCategories();
 

@@ -4,19 +4,6 @@ Future ideas to revisit. Not in scope for the current build.
 
 ---
 
-## Navan reimbursement reconciliation
-
-**The problem:** Navan deposits show up as income but represent expense reimbursements. Barry needs confidence that every `reimbursable` expense has a corresponding Navan deposit — i.e., he hasn't been left unpaid.
-
-**What this would look like:**
-- A way to link a `reimbursement` income transaction (the Navan deposit) to one or more `reimbursable` expense transactions it covers
-- A view that shows open/unmatched reimbursable expenses (money spent, not yet paid back) vs. matched ones
-- Possibly a running balance: total reimbursable outstanding vs. total reimbursements received
-
-**Why deferred:** Requires a new data relationship (expense ↔ reimbursement matching), a UI for linking them, and a reconciliation view. Solid chunk of work — revisit after the core app is stable.
-
----
-
 ## Historical data import for year-long P&L
 
 **The problem:** Barry has already categorized Jan–May 2026 in his spreadsheet. Pulling that history into the app would enable a full year-to-date P&L view rather than just the current month.

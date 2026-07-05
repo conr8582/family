@@ -44,19 +44,25 @@ window.CATEGORIES = {{ categoriesFlat | dump | safe }};
           </span>
         </div>
         <div class="tx-lookup-result" hidden></div>
+        {% if tx.suggested_category_id %}
+        <div class="tx-suggested-badge" title="Matches the {{ tx.suggested_date_display }} charge — confirm and hit Done to save">
+          &#10022; Suggested from {{ tx.suggested_date_display }}
+        </div>
+        {% endif %}
         <div class="tx-controls">
 
           {# Category combobox #}
-          <div class="combobox">
+          <div class="combobox{% if tx.suggested_category_id %} combobox--suggested{% endif %}">
             <input
               type="text"
               class="tx-category-text"
               placeholder="Category…"
               autocomplete="off"
               aria-label="Category"
-              {% if tx.category_id %}data-selected-id="{{ tx.category_id }}"{% endif %}
+              {% if tx.category_id %}data-selected-id="{{ tx.category_id }}"
+              {% elif tx.suggested_category_id %}data-selected-id="{{ tx.suggested_category_id }}"{% endif %}
             >
-            <input type="hidden" class="tx-category" value="{{ tx.category_id or '' }}">
+            <input type="hidden" class="tx-category" value="{{ tx.category_id or tx.suggested_category_id or '' }}">
             <ul class="combobox-list" hidden></ul>
           </div>
 
@@ -82,11 +88,11 @@ window.CATEGORIES = {{ categoriesFlat | dump | safe }};
           </select>
 
           <input
-            class="tx-notes"
+            class="tx-notes{% if tx.suggested_notes and not tx.notes %} tx-notes--suggested{% endif %}"
             type="text"
             name="notes"
             placeholder="Note…"
-            value="{{ tx.notes or '' }}"
+            value="{{ tx.notes or tx.suggested_notes or '' }}"
             aria-label="Notes"
           >
 
