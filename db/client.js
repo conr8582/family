@@ -21,6 +21,10 @@ if (fs.existsSync(lockPath)) {
 
 const db = new Database(dbPath);
 
+// Wait up to 5s for a momentary lock to clear instead of throwing immediately —
+// this app sometimes has more than one process touching the file at once
+// (daily cron sync overlapping with a page load, ad-hoc admin scripts, etc).
+db.exec('PRAGMA busy_timeout = 5000');
 db.exec('PRAGMA foreign_keys = ON');
 
 // Idempotent migrations
