@@ -17,6 +17,9 @@ window.BUDGET_YEAR = "{{ yearStr or '' }}";
       <a href="/budget?view=year&year={{ nextYear }}" class="month-arrow" aria-label="Next year">&#8594;</a>
     {% endif %}
   </div>
+  {% if isCurrentYear %}
+  <p class="budget-subcaption">Line items below are budgeted through {{ monthsElapsedLabel }} ({{ monthsElapsed }} of 12 months) — not the full year.</p>
+  {% endif %}
   {% else %}
   <div class="month-nav">
     <a href="/budget?view=month&month={{ prevMonth }}" class="month-arrow" aria-label="Previous month">&#8592;</a>
@@ -46,6 +49,22 @@ window.BUDGET_YEAR = "{{ yearStr or '' }}";
   <a href="/">{{ unreviewedCount }} unreviewed transaction{{ 's' if unreviewedCount !== 1 }} not yet included in these totals →</a>
 </div>
 {% endif %}
+
+{# ── At-a-glance summary — actuals only, no budget math ─────────────── #}
+<section class="budget-glance">
+  <div class="glance-stat">
+    <span class="glance-label">Total Income</span>
+    <span class="glance-value">{{ totalIncomeActual | formatCentsPlain }}</span>
+  </div>
+  <div class="glance-stat">
+    <span class="glance-label">Total Expenses</span>
+    <span class="glance-value">{{ totalExpenseActual | formatCentsPlain }}</span>
+  </div>
+  <div class="glance-stat glance-stat--net">
+    <span class="glance-label">Net Income</span>
+    <span class="glance-value {{ 'over' if netActual < 0 }}">{{ netActual | formatVariance }}</span>
+  </div>
+</section>
 
 {# ── Income ──────────────────────────────────────────────── #}
 <section class="budget-section">

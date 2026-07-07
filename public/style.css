@@ -395,6 +395,59 @@ input:focus, select:focus, textarea:focus {
 .unreviewed-banner a { color: #92400e; text-decoration: none; }
 .unreviewed-banner a:hover { text-decoration: underline; }
 
+.budget-subcaption {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  margin-top: 4px;
+}
+
+/* ── At-a-glance summary (actuals only) ───────────────────────── */
+.budget-glance {
+  display: flex;
+  gap: 32px;
+  margin: 20px 0 36px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.glance-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.glance-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.glance-value {
+  font-size: 1.625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.glance-stat--net {
+  margin-left: auto;
+  padding-left: 32px;
+  border-left: 1px solid var(--border);
+  text-align: right;
+}
+
+.glance-value.over { color: var(--red); }
+.glance-stat--net .glance-value:not(.over) { color: var(--green); }
+
+@media (max-width: 640px) {
+  .budget-glance { flex-wrap: wrap; gap: 16px 24px; }
+  .glance-stat--net { margin-left: 0; padding-left: 0; border-left: none; text-align: left; }
+}
+
 .budget-section { margin-bottom: 36px; }
 
 .section-heading {

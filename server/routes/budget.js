@@ -54,13 +54,18 @@ router.get('/budget', (req, res) => {
     const yearStr = String(yearNum);
     const isCurrentYear = yearNum === nowYear;
 
-    // Per-category actuals summed across the whole year; budget is annualized (monthly x 12).
+    // Budget is prorated "to date" — full 12 months for a past year, but only
+    // through the current month for the year in progress (otherwise every
+    // category looks wildly under budget for a year that's only partway done).
+    const monthsElapsed = isCurrentYear ? now.getMonth() + 1 : 12;
+
+    // Per-category actuals summed across the whole year; budget prorated to date.
     const rows = db.prepare(`
       SELECT
         c.id,
         c.name,
         c.type,
-        c.monthly_budget_cents * 12 AS budget_cents,
+        c.monthly_budget_cents * ? AS budget_cents,
         c.sort_order,
         COALESCE(SUM(
           CASE
@@ -80,7 +85,7 @@ router.get('/budget', (req, res) => {
       GROUP BY c.id
       HAVING c.active = 1 OR actual_cents <> 0
       ORDER BY c.sort_order
-    `).all([yearStr]);
+    `).all([monthsElapsed, yearStr]);
 
     const { n: unreviewedCount } = isCurrentYear ? db.prepare(`
       SELECT count(*) AS n FROM transactions
@@ -94,6 +99,8 @@ router.get('/budget', (req, res) => {
       nextYear: yearNum + 1,
       isCurrentYear,
       periodLabel: yearStr,
+      monthsElapsed,
+      monthsElapsedLabel: MONTH_NAMES[monthsElapsed - 1],
       unreviewedCount,
       ...splitAndTotal(rows),
       activePage: 'budget',
