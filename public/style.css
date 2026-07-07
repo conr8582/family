@@ -363,6 +363,24 @@ input:focus, select:focus, textarea:focus {
   line-height: 1;
   user-select: none;
 }
+
+.month-select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8a82' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 2px center;
+  border: none;
+  padding: 0 22px 0 2px;
+  cursor: pointer;
+  width: auto;
+}
+
+.month-select:hover { color: var(--accent); }
+.month-select:focus { outline: none; }
 .month-arrow:hover { color: var(--text); background: var(--bg); }
 .month-arrow.disabled { color: var(--border); cursor: default; }
 
@@ -828,15 +846,15 @@ input:focus, select:focus, textarea:focus {
   .linked-acct { display: none; }
 }
 
-/* ── Reimbursements — tabs ────────────────────────────────────── */
-.reimb-tabs {
+/* ── Tabs (reimbursements Open/Closed, budget Month/Year, etc.) ──── */
+.reimb-tabs, .view-tabs {
   display: flex;
   gap: 4px;
   margin-top: 16px;
   border-bottom: 1px solid var(--border);
 }
 
-.reimb-tab {
+.reimb-tab, .view-tab {
   display: inline-block;
   padding: 8px 4px;
   margin-bottom: -1px;
@@ -847,8 +865,8 @@ input:focus, select:focus, textarea:focus {
   margin-right: 20px;
 }
 
-.reimb-tab:hover { color: var(--text); }
-.reimb-tab.active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+.reimb-tab:hover, .view-tab:hover { color: var(--text); }
+.reimb-tab.active, .view-tab.active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
 
 /* ── Reimbursements — two-column layout ──────────────────────── */
 .reimb-layout {

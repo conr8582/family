@@ -1,16 +1,43 @@
 {% extends "base.njk" %}
 
 {% block content %}
-<script>window.BUDGET_MONTH = "{{ monthStr }}";</script>
+<script>
+window.BUDGET_VIEW = "{{ view }}";
+window.BUDGET_MONTH = "{{ monthStr or '' }}";
+window.BUDGET_YEAR = "{{ yearStr or '' }}";
+</script>
 <div class="budget-header">
+  {% if view === 'year' %}
   <div class="month-nav">
-    <a href="/budget?month={{ prevMonth }}" class="month-arrow" aria-label="Previous month">&#8592;</a>
-    <h1>{{ monthLabel }}</h1>
+    <a href="/budget?view=year&year={{ prevYear }}" class="month-arrow" aria-label="Previous year">&#8592;</a>
+    <h1>{{ periodLabel }}</h1>
+    {% if isCurrentYear %}
+      <span class="month-arrow disabled" aria-hidden="true">&#8594;</span>
+    {% else %}
+      <a href="/budget?view=year&year={{ nextYear }}" class="month-arrow" aria-label="Next year">&#8594;</a>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="month-nav">
+    <a href="/budget?view=month&month={{ prevMonth }}" class="month-arrow" aria-label="Previous month">&#8592;</a>
+    <h1>
+      <select id="monthSelect" class="month-select" aria-label="Select month">
+        {% for opt in monthOptions %}
+        <option value="{{ opt.value }}" {% if opt.value === monthStr %}selected{% endif %}>{{ opt.label }}</option>
+        {% endfor %}
+      </select>
+    </h1>
     {% if isCurrentMonth %}
       <span class="month-arrow disabled" aria-hidden="true">&#8594;</span>
     {% else %}
-      <a href="/budget?month={{ nextMonth }}" class="month-arrow" aria-label="Next month">&#8594;</a>
+      <a href="/budget?view=month&month={{ nextMonth }}" class="month-arrow" aria-label="Next month">&#8594;</a>
     {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="view-tabs">
+    <a href="/budget?view=month" class="view-tab{% if view !== 'year' %} active{% endif %}">Month</a>
+    <a href="/budget?view=year{% if yearNum %}&year={{ yearNum }}{% endif %}" class="view-tab{% if view === 'year' %} active{% endif %}">Year</a>
   </div>
 </div>
 
@@ -34,9 +61,9 @@
     </thead>
     <tbody>
       {% for r in income %}
-      <tr class="budget-row {{ 'zero-row' if r.actual_cents === 0 and r.monthly_budget_cents === 0 }}" data-category-id="{{ r.id }}">
+      <tr class="budget-row {{ 'zero-row' if r.actual_cents === 0 and r.budget_cents === 0 }}" data-category-id="{{ r.id }}">
         <td><span class="row-toggle">›</span> {{ r.name }}</td>
-        <td class="num">{{ r.monthly_budget_cents | formatCentsPlain }}</td>
+        <td class="num">{{ r.budget_cents | formatCentsPlain }}</td>
         <td class="num">{{ r.actual_cents | formatCentsPlain }}</td>
         <td class="num {{ 'over' if r.variance_cents < 0 }}">{{ r.variance_cents | formatVariance }}</td>
       </tr>
@@ -69,7 +96,7 @@
     </thead>
     <tbody>
       {% for r in expenses %}
-      <tr class="budget-row {{ 'zero-row' if r.actual_cents === 0 and r.monthly_budget_cents === 0 }}" data-category-id="{{ r.id }}">
+      <tr class="budget-row {{ 'zero-row' if r.actual_cents === 0 and r.budget_cents === 0 }}" data-category-id="{{ r.id }}">
         <td>
           <span class="row-toggle">›</span> {{ r.name }}
           {% if r.pct !== null %}
@@ -79,7 +106,7 @@
           </div>
           {% endif %}
         </td>
-        <td class="num">{{ r.monthly_budget_cents | formatCentsPlain }}</td>
+        <td class="num">{{ r.budget_cents | formatCentsPlain }}</td>
         <td class="num">
           {{ r.actual_cents | formatCentsPlain }}
         </td>

@@ -285,12 +285,15 @@ document.addEventListener('click', async (e) => {
   row.after(detailRow);
 
   try {
-    const month = window.BUDGET_MONTH ? `?month=${window.BUDGET_MONTH}` : '';
-    const res  = await fetch(`/api/budget/${categoryId}/transactions${month}`);
+    const params = window.BUDGET_VIEW === 'year'
+      ? `?view=year&year=${window.BUDGET_YEAR}`
+      : `?month=${window.BUDGET_MONTH}`;
+    const res  = await fetch(`/api/budget/${categoryId}/transactions${params}`);
     const txns = await res.json();
 
     if (!txns.length) {
-      detailRow.querySelector('.drill-down-list').innerHTML = '<div class="drill-empty">No transactions this month.</div>';
+      const period = window.BUDGET_VIEW === 'year' ? 'this year' : 'this month';
+      detailRow.querySelector('.drill-down-list').innerHTML = `<div class="drill-empty">No transactions ${period}.</div>`;
       return;
     }
 
@@ -310,6 +313,11 @@ document.addEventListener('click', async (e) => {
   } catch {
     detailRow.querySelector('.drill-down-list').innerHTML = '<div class="drill-empty">Failed to load.</div>';
   }
+});
+
+// Budget month-select dropdown — jump straight to the chosen month
+document.getElementById('monthSelect')?.addEventListener('change', (e) => {
+  window.location.href = `/budget?view=month&month=${e.target.value}`;
 });
 
 // ── Reimbursements — searchable expense combobox ─────────────────────────────
