@@ -104,6 +104,15 @@ const getSplitsForTx = db.prepare(`
   ORDER BY s.created_at DESC, s.id DESC
 `);
 
+// Income offsets already applied FROM an incoming payment, most recent first.
+const getOffsetsForIncome = db.prepare(`
+  SELECT o.id, o.amount_cents, o.notes, t.description AS expense_description, t.date AS expense_date
+  FROM income_offsets o
+  JOIN transactions t ON t.id = o.expense_transaction_id
+  WHERE o.income_transaction_id = ?
+  ORDER BY o.created_at DESC, o.id DESC
+`);
+
 // ── GET /filed — filed transactions (reviewed = 1) ────────────────────────────
 router.get('/filed', (req, res) => {
   const rawTx = db.prepare(`
@@ -119,15 +128,27 @@ router.get('/filed', (req, res) => {
   const atmCategory = db.prepare("SELECT id FROM categories WHERE name = 'ATM'").get([]);
 
   const rawTxWithSplits = rawTx.map(tx => {
-    if (!atmCategory || tx.category_id !== atmCategory.id) return tx;
-    const splits = getSplitsForTx.all([tx.id]);
-    const splitTotal = splits.reduce((s, r) => s + r.amount_cents, 0);
-    return {
-      ...tx,
-      is_atm: true,
-      splits,
-      remaining_cents: Math.abs(tx.amount_cents) - splitTotal,
-    };
+    if (atmCategory && tx.category_id === atmCategory.id) {
+      const splits = getSplitsForTx.all([tx.id]);
+      const splitTotal = splits.reduce((s, r) => s + r.amount_cents, 0);
+      return {
+        ...tx,
+        is_atm: true,
+        splits,
+        remaining_cents: Math.abs(tx.amount_cents) - splitTotal,
+      };
+    }
+    if (tx.amount_cents > 0) {
+      const offsets = getOffsetsForIncome.all([tx.id]);
+      const offsetTotal = offsets.reduce((s, r) => s + r.amount_cents, 0);
+      return {
+        ...tx,
+        is_income_source: true,
+        offsets,
+        remaining_cents: tx.amount_cents - offsetTotal,
+      };
+    }
+    return tx;
   });
 
   const { flat, byType } = getCategories();
@@ -139,6 +160,96 @@ router.get('/filed', (req, res) => {
     categoriesFlat: flat,
     activePage: 'filed',
   });
+});
+
+// ── GET /api/transactions/search-expenses — find an expense to offset ─────────
+router.get('/api/transactions/search-expenses', (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json([]);
+
+  const candidates = db.prepare(`
+    SELECT t.id, t.date, t.description, t.amount_cents, a.name AS account_name
+    FROM transactions t
+    JOIN accounts a ON a.id = t.account_id
+    WHERE t.reviewed = 1
+      AND t.amount_cents < 0
+      AND t.description LIKE ?
+    ORDER BY t.date DESC
+    LIMIT 40
+  `).all([`%${q}%`]);
+
+  const results = candidates.map(t => {
+    const { total } = db.prepare(
+      'SELECT COALESCE(SUM(amount_cents), 0) AS total FROM income_offsets WHERE expense_transaction_id = ?'
+    ).get([t.id]);
+    return { ...t, remaining_cents: Math.abs(t.amount_cents) - total };
+  }).filter(t => t.remaining_cents > 0).slice(0, 20);
+
+  res.json(results);
+});
+
+// ── POST /api/income-offsets — apply part of an incoming payment to an expense ─
+router.post('/api/income-offsets', (req, res) => {
+  const incomeTransactionId = parseInt(req.body.incomeTransactionId, 10);
+  const expenseTransactionId = parseInt(req.body.expenseTransactionId, 10);
+  const amount = parseFloat(req.body.amount);
+  const notes = (req.body.notes || '').trim() || null;
+
+  if (!Number.isFinite(incomeTransactionId) || !Number.isFinite(expenseTransactionId) || !Number.isFinite(amount) || amount <= 0) {
+    return res.status(400).json({ error: 'Invalid input' });
+  }
+  const amountCents = Math.round(amount * 100);
+
+  const income = db.prepare('SELECT id, amount_cents FROM transactions WHERE id = ?').get([incomeTransactionId]);
+  if (!income || income.amount_cents <= 0) {
+    return res.status(400).json({ error: 'Not an incoming payment' });
+  }
+
+  const expense = db.prepare('SELECT id, amount_cents FROM transactions WHERE id = ?').get([expenseTransactionId]);
+  if (!expense || expense.amount_cents >= 0) {
+    return res.status(400).json({ error: 'Not an expense' });
+  }
+
+  const { total: incomeUsed } = db.prepare(
+    'SELECT COALESCE(SUM(amount_cents), 0) AS total FROM income_offsets WHERE income_transaction_id = ?'
+  ).get([incomeTransactionId]);
+  const incomeRemaining = income.amount_cents - incomeUsed;
+  if (amountCents > incomeRemaining) {
+    return res.status(400).json({ error: `Only $${(incomeRemaining / 100).toFixed(2)} left to allocate` });
+  }
+
+  const { total: expenseUsed } = db.prepare(
+    'SELECT COALESCE(SUM(amount_cents), 0) AS total FROM income_offsets WHERE expense_transaction_id = ?'
+  ).get([expenseTransactionId]);
+  const expenseRemaining = Math.abs(expense.amount_cents) - expenseUsed;
+  if (amountCents > expenseRemaining) {
+    return res.status(400).json({ error: `That expense only has $${(expenseRemaining / 100).toFixed(2)} left to offset` });
+  }
+
+  db.prepare(`
+    INSERT INTO income_offsets (income_transaction_id, expense_transaction_id, amount_cents, notes)
+    VALUES (?, ?, ?, ?)
+  `).run([incomeTransactionId, expenseTransactionId, amountCents, notes]);
+
+  res.json({ ok: true, remaining_cents: incomeRemaining - amountCents });
+});
+
+// ── POST /api/income-offsets/:id/delete — undo an allocation ──────────────────
+router.post('/api/income-offsets/:id/delete', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid ID' });
+
+  const offset = db.prepare('SELECT income_transaction_id, amount_cents FROM income_offsets WHERE id = ?').get([id]);
+  if (!offset) return res.status(404).json({ error: 'Not found' });
+
+  db.prepare('DELETE FROM income_offsets WHERE id = ?').run([id]);
+
+  const income = db.prepare('SELECT amount_cents FROM transactions WHERE id = ?').get([offset.income_transaction_id]);
+  const { total: incomeUsed } = db.prepare(
+    'SELECT COALESCE(SUM(amount_cents), 0) AS total FROM income_offsets WHERE income_transaction_id = ?'
+  ).get([offset.income_transaction_id]);
+
+  res.json({ ok: true, remaining_cents: income.amount_cents - incomeUsed });
 });
 
 // ── POST /api/atm-splits — carve part of an ATM withdrawal into another category ─

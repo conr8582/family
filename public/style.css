@@ -162,9 +162,9 @@ input:focus, select:focus, textarea:focus {
 .review-header { margin-bottom: 20px; padding-top: 8px; }
 .review-header h1 { display: flex; align-items: center; }
 
-.filed-search-wrap { margin-bottom: 24px; }
+.filed-search-wrap { margin-bottom: 24px; display: flex; gap: 10px; flex-wrap: wrap; }
 .filed-search {
-  width: 100%;
+  flex: 1 1 300px;
   max-width: 400px;
   padding: 8px 12px;
   font-size: 0.9375rem;
@@ -175,6 +175,18 @@ input:focus, select:focus, textarea:focus {
   outline: none;
 }
 .filed-search:focus { border-color: var(--accent); }
+
+.filed-category-filter {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 8px 12px;
+  font-size: 0.9375rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+.filed-category-filter:focus { border-color: var(--accent); outline: none; }
 
 .empty-state {
   padding: 60px 0;
@@ -738,7 +750,7 @@ input:focus, select:focus, textarea:focus {
   padding: 10px 14px 12px;
 }
 
-.reimb-combobox {
+.reimb-combobox, .offset-expense-search {
   position: relative;
   width: 100%;
   display: flex;
@@ -751,11 +763,11 @@ input:focus, select:focus, textarea:focus {
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.reimb-combobox:hover {
+.reimb-combobox:hover, .offset-expense-search:hover {
   border-color: #c7c7c2;
 }
 
-.reimb-combobox:focus-within {
+.reimb-combobox:focus-within, .offset-expense-search:focus-within {
   border-style: solid;
   border-color: var(--accent);
   background: var(--surface);
@@ -771,7 +783,7 @@ input:focus, select:focus, textarea:focus {
 }
 .reimb-combobox:focus-within .reimb-combobox-icon { color: var(--accent); }
 
-.reimb-expense-text {
+.reimb-expense-text, .offset-expense-text {
   flex: 1;
   min-width: 0;
   font-size: 0.875rem;
@@ -782,10 +794,10 @@ input:focus, select:focus, textarea:focus {
   padding: 0;
   cursor: text;
 }
-.reimb-expense-text::placeholder { color: var(--muted); }
-.reimb-expense-text:focus { color: var(--text); }
+.reimb-expense-text::placeholder, .offset-expense-text::placeholder { color: var(--muted); }
+.reimb-expense-text:focus, .offset-expense-text:focus { color: var(--text); }
 
-.reimb-expense-list {
+.reimb-expense-list, .offset-expense-list {
   position: absolute;
   bottom: calc(100% + 8px);
   left: -1px;
@@ -802,7 +814,7 @@ input:focus, select:focus, textarea:focus {
   margin: 0;
 }
 
-.reimb-expense-list li {
+.reimb-expense-list li, .offset-expense-list li {
   padding: 10px 14px;
   font-size: 0.9375rem;
   cursor: pointer;
@@ -812,7 +824,7 @@ input:focus, select:focus, textarea:focus {
   gap: 16px;
 }
 
-.reimb-expense-list li .ei-desc {
+.reimb-expense-list li .ei-desc, .offset-expense-list li .ei-desc {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -820,14 +832,14 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
 }
 
-.reimb-expense-list li .ei-date {
+.reimb-expense-list li .ei-date, .offset-expense-list li .ei-date {
   font-size: 0.8125rem;
   color: var(--muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.reimb-expense-list li .ei-amt {
+.reimb-expense-list li .ei-amt, .offset-expense-list li .ei-amt {
   font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
@@ -835,8 +847,8 @@ input:focus, select:focus, textarea:focus {
   flex-shrink: 0;
 }
 
-.reimb-expense-list li:hover,
-.reimb-expense-list li.active {
+.reimb-expense-list li:hover, .offset-expense-list li:hover,
+.reimb-expense-list li.active, .offset-expense-list li.active {
   background: var(--bg);
 }
 
@@ -1036,7 +1048,7 @@ input:focus, select:focus, textarea:focus {
 .itemize-split-amt { font-variant-numeric: tabular-nums; color: var(--text); flex-shrink: 0; }
 .itemize-split-note { color: var(--muted); font-style: italic; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.itemize-split-remove {
+.itemize-split-remove, .offset-remove {
   all: unset;
   cursor: pointer;
   color: var(--muted);
@@ -1046,9 +1058,9 @@ input:focus, select:focus, textarea:focus {
   border-radius: 3px;
   margin-left: auto;
 }
-.itemize-split-remove:hover { color: var(--red); background: var(--surface); }
+.itemize-split-remove:hover, .offset-remove:hover { color: var(--red); background: var(--surface); }
 
-.itemize-add-row {
+.itemize-add-row, .offset-add-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1071,6 +1083,8 @@ input:focus, select:focus, textarea:focus {
 }
 .itemize-combobox .tx-category-text { border: none; padding: 0; background: none; }
 
+.offset-expense-search { flex: 1 1 220px; min-width: 180px; width: auto; }
+
 .itemize-amount-input { flex: 0 0 100px; }
 .itemize-notes-input { flex: 1 1 160px; min-width: 120px; }
 
@@ -1079,3 +1093,23 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.8125rem;
   flex-basis: 100%;
 }
+
+/* ── Income offset toggle ─────────────────────────────────────── */
+.tx-offset-toggle {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.tx-offset-toggle:hover { color: var(--text); border-color: var(--muted); }
+
+.tx-offset-toggle--active {
+  color: var(--green);
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.tx-offset-toggle--active:hover { background: #dcfce7; }

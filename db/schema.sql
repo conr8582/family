@@ -51,8 +51,23 @@ CREATE TABLE IF NOT EXISTS atm_splits (
   created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Allocates part of an incoming payment (Venmo, Zelle, etc.) against a
+-- specific expense, netting both down — e.g. a friend Venmos $50 toward a
+-- $100 dinner, so Dining Out nets to $50. Whatever isn't allocated just
+-- stays as ordinary income.
+CREATE TABLE IF NOT EXISTS income_offsets (
+  id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+  income_transaction_id  INTEGER NOT NULL REFERENCES transactions(id),
+  expense_transaction_id INTEGER NOT NULL REFERENCES transactions(id),
+  amount_cents          INTEGER NOT NULL, -- positive; magnitude allocated
+  notes                 TEXT,
+  created_at            TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_transactions_date     ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_reviewed ON transactions(reviewed);
 CREATE INDEX IF NOT EXISTS idx_transactions_account  ON transactions(account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category_id);
 CREATE INDEX IF NOT EXISTS idx_atm_splits_transaction ON atm_splits(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_income_offsets_income  ON income_offsets(income_transaction_id);
+CREATE INDEX IF NOT EXISTS idx_income_offsets_expense ON income_offsets(expense_transaction_id);

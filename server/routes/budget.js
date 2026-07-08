@@ -56,6 +56,37 @@ function applyAtmSplits(rows, dateFilterSql, dateValue) {
   return rows;
 }
 
+// Nets down both sides of an income-offset allocation — an expense that got
+// partially covered by an incoming payment shrinks in its own category, and
+// the income transaction only counts whatever wasn't allocated away (e.g. a
+// friend Venmos $50 toward a $100 dinner: Dining Out nets to $50, and only
+// the untouched part of the Venmo, if any, counts as income). Mutates and
+// returns `rows`.
+function applyIncomeOffsets(rows, dateFilterSql, dateValue) {
+  const expenseSide = db.prepare(`
+    SELECT t.category_id, SUM(o.amount_cents) AS total
+    FROM income_offsets o
+    JOIN transactions t ON t.id = o.expense_transaction_id
+    WHERE t.reviewed = 1 AND ${dateFilterSql}
+    GROUP BY t.category_id
+  `).all([dateValue]);
+
+  const incomeSide = db.prepare(`
+    SELECT t.category_id, SUM(o.amount_cents) AS total
+    FROM income_offsets o
+    JOIN transactions t ON t.id = o.income_transaction_id
+    WHERE t.reviewed = 1 AND ${dateFilterSql}
+    GROUP BY t.category_id
+  `).all([dateValue]);
+
+  for (const r of [...expenseSide, ...incomeSide]) {
+    const target = rows.find(row => row.id === r.category_id);
+    if (target) target.actual_cents -= r.total;
+  }
+
+  return rows;
+}
+
 function splitAndTotal(rows) {
   // ATM stays selectable in the category picker (so new withdrawals can
   // still be tagged) but drops off the budget table once it's fully
@@ -128,6 +159,7 @@ router.get('/budget', (req, res) => {
     `).all([monthsElapsed, yearStr]);
 
     applyAtmSplits(rows, "strftime('%Y', t.date) = ?", yearStr);
+    applyIncomeOffsets(rows, "strftime('%Y', t.date) = ?", yearStr);
 
     const { n: unreviewedCount } = isCurrentYear ? db.prepare(`
       SELECT count(*) AS n FROM transactions
@@ -203,6 +235,7 @@ router.get('/budget', (req, res) => {
   `).all([monthStr]);
 
   applyAtmSplits(rows, "strftime('%Y-%m', t.date) = ?", monthStr);
+  applyIncomeOffsets(rows, "strftime('%Y-%m', t.date) = ?", monthStr);
 
   // Only show unreviewed banner on the current month
   const { n: unreviewedCount } = isCurrentMonth ? db.prepare(`
@@ -286,6 +319,24 @@ router.get('/api/budget/:categoryId/transactions', (req, res) => {
       });
     }
     rows.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  }
+
+  // Net out income-offset allocations on either side — an expense that got
+  // partially covered by an incoming payment shows its reduced amount, and
+  // an income transaction shows only whatever wasn't allocated away.
+  for (const r of rows) {
+    if (typeof r.id !== 'number') continue; // skip synthetic ATM-split rows
+    if (r.amount_cents < 0) {
+      const { total } = db.prepare(
+        'SELECT COALESCE(SUM(amount_cents), 0) AS total FROM income_offsets WHERE expense_transaction_id = ?'
+      ).get([r.id]);
+      r.amount_cents += total;
+    } else if (r.amount_cents > 0) {
+      const { total } = db.prepare(
+        'SELECT COALESCE(SUM(amount_cents), 0) AS total FROM income_offsets WHERE income_transaction_id = ?'
+      ).get([r.id]);
+      r.amount_cents -= total;
+    }
   }
 
   res.json(rows);

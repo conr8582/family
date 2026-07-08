@@ -43,6 +43,18 @@ db.exec(`
   )
 `);
 db.exec('CREATE INDEX IF NOT EXISTS idx_atm_splits_transaction ON atm_splits(transaction_id)');
+db.exec(`
+  CREATE TABLE IF NOT EXISTS income_offsets (
+    id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+    income_transaction_id  INTEGER NOT NULL REFERENCES transactions(id),
+    expense_transaction_id INTEGER NOT NULL REFERENCES transactions(id),
+    amount_cents           INTEGER NOT NULL,
+    notes                  TEXT,
+    created_at             TEXT    NOT NULL DEFAULT (datetime('now'))
+  )
+`);
+db.exec('CREATE INDEX IF NOT EXISTS idx_income_offsets_income ON income_offsets(income_transaction_id)');
+db.exec('CREATE INDEX IF NOT EXISTS idx_income_offsets_expense ON income_offsets(expense_transaction_id)');
 
 // Category updates
 db.exec(`UPDATE categories SET monthly_budget_cents = 90000 WHERE name = 'Dining Out'`);

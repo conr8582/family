@@ -202,10 +202,10 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// ── Filed — ATM itemize toggle ────────────────────────────────────────────────
+// ── Filed — ATM itemize / income-offset panel toggle ─────────────────────────
 
 document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.tx-itemize-toggle');
+  const btn = e.target.closest('.tx-itemize-toggle, .tx-offset-toggle');
   if (!btn) return;
   const panel = btn.closest('.tx-row').querySelector('.tx-itemize-panel');
   panel.hidden = !panel.hidden;
@@ -262,6 +262,154 @@ document.addEventListener('click', async (e) => {
   btn.disabled = true;
   try {
     const res = await fetch(`/api/atm-splits/${btn.dataset.splitId}/delete`, { method: 'POST' });
+    if (!res.ok) throw new Error();
+    window.location.reload();
+  } catch {
+    btn.disabled = false;
+    alert('Could not remove — please try again.');
+  }
+});
+
+// ── Filed — income offset: searchable expense picker ─────────────────────────
+
+function initOffsetExpenseSearch() {
+  document.querySelectorAll('.offset-expense-search').forEach(box => {
+    const textInput   = box.querySelector('.offset-expense-text');
+    const hiddenInput = box.querySelector('.offset-expense-id');
+    const list        = box.querySelector('.offset-expense-list');
+    let activeIdx = -1;
+    let debounceTimer = null;
+    let latestResults = [];
+
+    function label(t) {
+      return `${t.date.slice(5)} — ${t.description} ($${(Math.abs(t.amount_cents) / 100).toFixed(2)})`;
+    }
+
+    function renderList(matches) {
+      latestResults = matches;
+      list.innerHTML = '';
+      activeIdx = -1;
+      if (!matches.length) { list.hidden = true; return; }
+      matches.forEach(t => {
+        const li = document.createElement('li');
+        li.dataset.id = t.id;
+        li.innerHTML = `
+          <span class="ei-date">${t.date.slice(5)}</span>
+          <span class="ei-desc">${t.description}</span>
+          <span class="ei-amt">$${(Math.abs(t.amount_cents) / 100).toFixed(2)} left</span>
+        `;
+        li.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          selectExpense(t);
+        });
+        list.appendChild(li);
+      });
+      list.hidden = false;
+    }
+
+    function selectExpense(t) {
+      textInput.value = label(t);
+      hiddenInput.value = t.id;
+      hiddenInput.dataset.remainingCents = t.remaining_cents;
+      list.hidden = true;
+    }
+
+    async function search(q) {
+      if (q.length < 2) { renderList([]); return; }
+      try {
+        const res = await fetch(`/api/transactions/search-expenses?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        renderList(data);
+      } catch {
+        renderList([]);
+      }
+    }
+
+    textInput.addEventListener('input', () => {
+      hiddenInput.value = '';
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => search(textInput.value.trim()), 250);
+    });
+
+    textInput.addEventListener('blur', () => {
+      setTimeout(() => { list.hidden = true; activeIdx = -1; }, 150);
+    });
+
+    textInput.addEventListener('keydown', e => {
+      const items = list.querySelectorAll('li');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, items.length - 1);
+        items.forEach(li => li.classList.remove('active'));
+        if (items[activeIdx]) items[activeIdx].classList.add('active');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        items.forEach(li => li.classList.remove('active'));
+        if (items[activeIdx]) items[activeIdx].classList.add('active');
+      } else if (e.key === 'Enter' && activeIdx >= 0) {
+        e.preventDefault();
+        if (latestResults[activeIdx]) selectExpense(latestResults[activeIdx]);
+      } else if (e.key === 'Escape') {
+        list.hidden = true;
+      }
+    });
+  });
+}
+
+initOffsetExpenseSearch();
+
+// ── Filed — income offset add ─────────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.offset-add-btn');
+  if (!btn) return;
+
+  const addRow = btn.closest('.offset-add-row');
+  const incomeTransactionId = addRow.dataset.transactionId;
+  const expenseTransactionId = addRow.querySelector('.offset-expense-id').value;
+  const amount = addRow.querySelector('.itemize-amount-input').value;
+  const notes = addRow.querySelector('.itemize-notes-input').value.trim();
+  const errorEl = addRow.querySelector('.itemize-error');
+  errorEl.hidden = true;
+
+  if (!expenseTransactionId) {
+    errorEl.textContent = 'Search for and pick an expense.';
+    errorEl.hidden = false;
+    return;
+  }
+  if (!amount || parseFloat(amount) <= 0) {
+    errorEl.textContent = 'Enter an amount.';
+    errorEl.hidden = false;
+    return;
+  }
+
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/income-offsets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ incomeTransactionId, expenseTransactionId, amount, notes }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not add — please try again.');
+    window.location.reload();
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.hidden = false;
+    btn.disabled = false;
+  }
+});
+
+// ── Filed — income offset remove ──────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.offset-remove');
+  if (!btn) return;
+
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/income-offsets/${btn.dataset.offsetId}/delete`, { method: 'POST' });
     if (!res.ok) throw new Error();
     window.location.reload();
   } catch {
@@ -581,19 +729,27 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// ── Filed — description search filter ────────────────────────────────────────
+// ── Filed — description search + category filter ─────────────────────────────
 
 const filedSearch = document.getElementById('filedSearch');
+const filedCategoryFilter = document.getElementById('filedCategoryFilter');
+
 if (filedSearch) {
-  filedSearch.addEventListener('input', () => {
+  const badge = document.getElementById('filedCount');
+  if (badge) badge.dataset.total = badge.textContent;
+
+  function applyFiledFilters() {
     const q = filedSearch.value.trim().toLowerCase();
+    const categoryId = filedCategoryFilter ? filedCategoryFilter.value : '';
     let visible = 0;
 
     document.querySelectorAll('#filedList .date-group').forEach(group => {
       let groupVisible = 0;
       group.querySelectorAll('.tx-row').forEach(row => {
         const desc = row.querySelector('.tx-desc')?.textContent.toLowerCase() || '';
-        const show = !q || desc.includes(q);
+        const matchesText = !q || desc.includes(q);
+        const matchesCategory = !categoryId || row.dataset.categoryId === categoryId;
+        const show = matchesText && matchesCategory;
         row.hidden = !show;
         if (show) groupVisible++;
       });
@@ -601,13 +757,11 @@ if (filedSearch) {
       visible += groupVisible;
     });
 
-    const badge = document.getElementById('filedCount');
-    if (badge) badge.textContent = q ? visible : badge.dataset.total || visible;
-  });
+    if (badge) badge.textContent = (q || categoryId) ? visible : badge.dataset.total;
+  }
 
-  // Store total so we can restore it when search is cleared
-  const badge = document.getElementById('filedCount');
-  if (badge) badge.dataset.total = badge.textContent;
+  filedSearch.addEventListener('input', applyFiledFilters);
+  filedCategoryFilter?.addEventListener('change', applyFiledFilters);
 }
 
 // ── "What is this?" merchant lookup ──────────────────────────────────────────
