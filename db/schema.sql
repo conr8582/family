@@ -40,7 +40,19 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 
+-- Itemized carve-outs of an ATM cash withdrawal into other spending categories
+-- (e.g. $20 of a $100 withdrawal turns out to have been a haircut / Shopping).
+CREATE TABLE IF NOT EXISTS atm_splits (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  transaction_id INTEGER NOT NULL REFERENCES transactions(id),
+  category_id    INTEGER NOT NULL REFERENCES categories(id),
+  amount_cents   INTEGER NOT NULL, -- positive; magnitude carved out of the withdrawal
+  notes          TEXT,
+  created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_transactions_date     ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_reviewed ON transactions(reviewed);
 CREATE INDEX IF NOT EXISTS idx_transactions_account  ON transactions(account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category_id);
+CREATE INDEX IF NOT EXISTS idx_atm_splits_transaction ON atm_splits(transaction_id);

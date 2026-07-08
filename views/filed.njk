@@ -91,6 +91,46 @@ window.CATEGORIES = {{ categoriesFlat | dump | safe }};
           <button class="btn tx-save" type="button">Save</button>
           <button class="btn tx-reopen" type="button">Re-open</button>
         </div>
+
+        {% if tx.is_atm %}
+        <div class="tx-atm-bar">
+          <button class="tx-itemize-toggle" type="button">
+            {% if tx.remaining_cents > 0 %}
+              Itemize · ${{ (tx.remaining_cents / 100) | round(2) }} left
+            {% else %}
+              &#10003; Fully itemized
+            {% endif %}
+          </button>
+        </div>
+        <div class="tx-itemize-panel" hidden>
+          {% if tx.splits.length > 0 %}
+          <div class="itemize-splits">
+            {% for s in tx.splits %}
+            <div class="itemize-split-row" data-split-id="{{ s.id }}">
+              <span class="itemize-split-cat">{{ s.category_name }}</span>
+              <span class="itemize-split-amt">${{ (s.amount_cents / 100) | round(2) }}</span>
+              {% if s.notes %}<span class="itemize-split-note">{{ s.notes }}</span>{% endif %}
+              <button class="itemize-split-remove" type="button" data-split-id="{{ s.id }}" title="Remove">&#215;</button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if tx.remaining_cents > 0 %}
+          <div class="itemize-add-row" data-transaction-id="{{ tx.id }}">
+            <div class="combobox itemize-combobox">
+              <input type="text" class="tx-category-text" placeholder="Category…" autocomplete="off">
+              <input type="hidden" class="tx-category">
+              <ul class="combobox-list" hidden></ul>
+            </div>
+            <input type="number" step="0.01" class="itemize-amount-input" placeholder="Amount" max="{{ (tx.remaining_cents / 100) | round(2) }}">
+            <input type="text" class="itemize-notes-input" placeholder="Note (optional)…">
+            <button class="btn itemize-add-btn" type="button">Add</button>
+            <span class="itemize-error" hidden></span>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>

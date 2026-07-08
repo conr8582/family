@@ -202,6 +202,74 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// ── Filed — ATM itemize toggle ────────────────────────────────────────────────
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.tx-itemize-toggle');
+  if (!btn) return;
+  const panel = btn.closest('.tx-row').querySelector('.tx-itemize-panel');
+  panel.hidden = !panel.hidden;
+});
+
+// ── Filed — ATM itemize add ───────────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.itemize-add-btn');
+  if (!btn) return;
+
+  const addRow = btn.closest('.itemize-add-row');
+  const transactionId = addRow.dataset.transactionId;
+  const categoryId = addRow.querySelector('.tx-category').value;
+  const amount = addRow.querySelector('.itemize-amount-input').value;
+  const notes = addRow.querySelector('.itemize-notes-input').value.trim();
+  const errorEl = addRow.querySelector('.itemize-error');
+  errorEl.hidden = true;
+
+  if (!categoryId) {
+    errorEl.textContent = 'Pick a category.';
+    errorEl.hidden = false;
+    return;
+  }
+  if (!amount || parseFloat(amount) <= 0) {
+    errorEl.textContent = 'Enter an amount.';
+    errorEl.hidden = false;
+    return;
+  }
+
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/atm-splits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transactionId, categoryId, amount, notes }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not add — please try again.');
+    window.location.reload();
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.hidden = false;
+    btn.disabled = false;
+  }
+});
+
+// ── Filed — ATM itemize remove ────────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.itemize-split-remove');
+  if (!btn) return;
+
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/atm-splits/${btn.dataset.splitId}/delete`, { method: 'POST' });
+    if (!res.ok) throw new Error();
+    window.location.reload();
+  } catch {
+    btn.disabled = false;
+    alert('Could not remove — please try again.');
+  }
+});
+
 // ── Review — Done button ──────────────────────────────────────────────────────
 
 document.addEventListener('click', async (e) => {

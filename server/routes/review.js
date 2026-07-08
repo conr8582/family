@@ -95,6 +95,15 @@ router.get('/', (req, res) => {
   });
 });
 
+// Splits already recorded against an ATM withdrawal, most recent first.
+const getSplitsForTx = db.prepare(`
+  SELECT s.id, s.category_id, s.amount_cents, s.notes, c.name AS category_name
+  FROM atm_splits s
+  JOIN categories c ON c.id = s.category_id
+  WHERE s.transaction_id = ?
+  ORDER BY s.created_at DESC, s.id DESC
+`);
+
 // ── GET /filed — filed transactions (reviewed = 1) ────────────────────────────
 router.get('/filed', (req, res) => {
   const rawTx = db.prepare(`
@@ -107,15 +116,92 @@ router.get('/filed', (req, res) => {
     ORDER BY t.date DESC, t.id DESC
   `).all([]);
 
+  const atmCategory = db.prepare("SELECT id FROM categories WHERE name = 'ATM'").get([]);
+
+  const rawTxWithSplits = rawTx.map(tx => {
+    if (!atmCategory || tx.category_id !== atmCategory.id) return tx;
+    const splits = getSplitsForTx.all([tx.id]);
+    const splitTotal = splits.reduce((s, r) => s + r.amount_cents, 0);
+    return {
+      ...tx,
+      is_atm: true,
+      splits,
+      remaining_cents: Math.abs(tx.amount_cents) - splitTotal,
+    };
+  });
+
   const { flat, byType } = getCategories();
 
   res.render('filed.njk', {
-    groups: groupByDate(rawTx),
+    groups: groupByDate(rawTxWithSplits),
     total: rawTx.length,
     categories: byType,
     categoriesFlat: flat,
     activePage: 'filed',
   });
+});
+
+// ── POST /api/atm-splits — carve part of an ATM withdrawal into another category ─
+router.post('/api/atm-splits', (req, res) => {
+  const transactionId = parseInt(req.body.transactionId, 10);
+  const categoryId = parseInt(req.body.categoryId, 10);
+  const amount = parseFloat(req.body.amount);
+  const notes = (req.body.notes || '').trim() || null;
+
+  if (!Number.isFinite(transactionId) || !Number.isFinite(categoryId) || !Number.isFinite(amount) || amount <= 0) {
+    return res.status(400).json({ error: 'Invalid input' });
+  }
+  const amountCents = Math.round(amount * 100);
+
+  const txn = db.prepare(`
+    SELECT t.id, t.amount_cents, c.name AS category_name
+    FROM transactions t
+    JOIN categories c ON c.id = t.category_id
+    WHERE t.id = ?
+  `).get([transactionId]);
+
+  if (!txn || txn.category_name !== 'ATM') {
+    return res.status(400).json({ error: 'Not an ATM transaction' });
+  }
+
+  const targetCategory = db.prepare('SELECT name FROM categories WHERE id = ?').get([categoryId]);
+  if (!targetCategory || targetCategory.name === 'ATM') {
+    return res.status(400).json({ error: 'Pick a category other than ATM' });
+  }
+
+  const { total: splitTotal } = db.prepare(
+    'SELECT COALESCE(SUM(amount_cents), 0) AS total FROM atm_splits WHERE transaction_id = ?'
+  ).get([transactionId]);
+
+  const remaining = Math.abs(txn.amount_cents) - splitTotal;
+  if (amountCents > remaining) {
+    return res.status(400).json({ error: `Only $${(remaining / 100).toFixed(2)} left to itemize` });
+  }
+
+  db.prepare(`
+    INSERT INTO atm_splits (transaction_id, category_id, amount_cents, notes)
+    VALUES (?, ?, ?, ?)
+  `).run([transactionId, categoryId, amountCents, notes]);
+
+  res.json({ ok: true, remaining_cents: remaining - amountCents });
+});
+
+// ── POST /api/atm-splits/:id/delete — undo an itemized carve-out ───────────────
+router.post('/api/atm-splits/:id/delete', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid ID' });
+
+  const split = db.prepare('SELECT transaction_id, amount_cents FROM atm_splits WHERE id = ?').get([id]);
+  if (!split) return res.status(404).json({ error: 'Not found' });
+
+  db.prepare('DELETE FROM atm_splits WHERE id = ?').run([id]);
+
+  const txn = db.prepare('SELECT amount_cents FROM transactions WHERE id = ?').get([split.transaction_id]);
+  const { total: splitTotal } = db.prepare(
+    'SELECT COALESCE(SUM(amount_cents), 0) AS total FROM atm_splits WHERE transaction_id = ?'
+  ).get([split.transaction_id]);
+
+  res.json({ ok: true, remaining_cents: Math.abs(txn.amount_cents) - splitTotal });
 });
 
 // ── POST /api/transactions/:id — save (used by both review Done + filed Save) ─

@@ -996,3 +996,86 @@ input:focus, select:focus, textarea:focus {
   font-style: italic;
   padding: 3px 0 6px;
 }
+
+/* ── ATM itemize ──────────────────────────────────────────────── */
+.tx-atm-bar { padding: 4px 0 0; }
+
+.tx-itemize-toggle {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.tx-itemize-toggle:hover { background: #fde68a; }
+
+.tx-itemize-panel {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.itemize-splits { margin-bottom: 8px; }
+
+.itemize-split-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8125rem;
+}
+.itemize-split-row:last-child { border-bottom: none; }
+
+.itemize-split-cat { font-weight: 500; flex-shrink: 0; }
+.itemize-split-amt { font-variant-numeric: tabular-nums; color: var(--text); flex-shrink: 0; }
+.itemize-split-note { color: var(--muted); font-style: italic; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.itemize-split-remove {
+  all: unset;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-left: auto;
+}
+.itemize-split-remove:hover { color: var(--red); background: var(--surface); }
+
+.itemize-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.itemize-combobox {
+  flex: 1 1 160px;
+  min-width: 140px;
+  border: 1.5px dashed var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.itemize-combobox:focus-within {
+  border-style: solid;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.itemize-combobox .tx-category-text { border: none; padding: 0; background: none; }
+
+.itemize-amount-input { flex: 0 0 100px; }
+.itemize-notes-input { flex: 1 1 160px; min-width: 120px; }
+
+.itemize-error {
+  color: var(--red);
+  font-size: 0.8125rem;
+  flex-basis: 100%;
+}
